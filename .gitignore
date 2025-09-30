@@ -1,0 +1,4 @@
+# raw sequencing data
+*.fastq
+*.fastq.gz
+*.sra
