@@ -3,7 +3,12 @@
 .Rhistory
 .RData
 .Ruserdata
+
+# Large reference files
+*.fa
+*.fa.gz
+*.gtf
+*.gtf.gz
 *.fastq
 *.fastq.gz
 *.sra
-
