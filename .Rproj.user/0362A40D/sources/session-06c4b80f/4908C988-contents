@@ -1,8 +1,0 @@
-*.Rproj
-.Rhistory
-.RData
-.Ruserdata
-*.fastq
-*.fastq.gz
-*.sra
-
