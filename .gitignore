@@ -1,9 +1,10 @@
+# Rstudio files
 *.Rproj
 .Rproj.user
 .Rhistory
 .RData
 .Ruserdata
-
+.DS_Store
 # Large reference files
 *.fa
 *.fa.gz
