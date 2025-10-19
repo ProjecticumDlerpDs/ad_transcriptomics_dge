@@ -9,7 +9,7 @@ set -euo pipefail
 
 # Path to directories 
 project="$HOME/ad_transcriptomics_dge"
-SRR_list="$project/raw_data/sample_list.txt" 
+SRR_list="$project/raw_data/SRR_Acc_List.txt" 
 output="$project/raw_data/fastq_data"
 
 # Create output directory

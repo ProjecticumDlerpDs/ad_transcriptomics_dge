@@ -13,3 +13,7 @@
 *.fastq
 *.fastq.gz
 *.sra
+# Ignore STAR index files
+raw_data/references/STAR_index/
+# Ignore nohup.out
+nohup.out
