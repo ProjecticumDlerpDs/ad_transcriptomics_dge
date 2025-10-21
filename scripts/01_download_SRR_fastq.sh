@@ -2,7 +2,7 @@
 # Script to download .fastq-files from a list with SRR ID's with fasterq-dump
 
 # Install packages 
-# conda install sratoolkit
+# conda install bioconda::sra-tools
 
 # Stop when errors occur
 set -euo pipefail

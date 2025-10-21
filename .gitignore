@@ -14,6 +14,7 @@
 *.fastq.gz
 *.sra
 # Ignore STAR index files
-raw_data/references/STAR_index/
+~/ad_transcriptomics_dge/references/STAR_index
 # Ignore nohup.out
 nohup.out
+/references/

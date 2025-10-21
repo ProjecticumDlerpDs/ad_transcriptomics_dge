@@ -2,7 +2,7 @@
 
 # Path to directories 
 project="$HOME/ad_transcriptomics_dge"
-output="$project/raw_data/references"
+output="$project/references"
 
 # Create output directory
 mkdir $output
