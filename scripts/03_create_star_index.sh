@@ -1,10 +1,15 @@
 #!/bin/bash
-
-# Install STAR: 
-# conda install bioconda::star
+# This script is intended to create a STAR indexfile. This indexfile is used to 
+# align snRNA-seq data to the GRCh38 genome. To build the indexfile this script
+# uses the full human genome fasta sequence and an annotation gene transfer 
+# format file as input to create an index file, the indexfile will be used 
+# downstream in the analysis to efficiently align sample sequences.
 
 # Activate environment: 
 # conda activate star
+
+# Install STAR: 
+# conda install bioconda::star
 
 # Stop the script upon errors
 set -euo pipefail
