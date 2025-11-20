@@ -13,7 +13,12 @@
 *.fastq
 *.fastq.gz
 *.sra
+GSE138852_counts.csv
 # Ignore nohup.out
 nohup.out
+# Ignore several folders
 /references/
-/analyses/SRR*
+/analyses/
+/fastqc/
+
+seurat/filtered_gene_bc_matrices/
