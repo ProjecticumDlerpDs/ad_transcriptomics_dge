@@ -4,6 +4,9 @@
 This project aims to develop a reliable and reproducible data-analysis pipeline for **single-nucleus RNA-seq (snRNA-seq)** data in order to identify **cell-type-specific differential gene expression** in Alzheimer’s disease.
 
 ## Contents
+- [Data](#data)
+- [Folderstructure](#folderstructure)
+- [Packages and dependancies](#packages-and-dependencies)
 
 ## Data
 In this project publicly available **DroNc-seq data** is used from the entorhinal cortex published by **Grubman et al.** (GEO ID: [GSE138852](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE138852)), containing nuclei from six Alzheimer patients and six controls (13,214 nuclei total).
