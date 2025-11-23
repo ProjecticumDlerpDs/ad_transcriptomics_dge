@@ -6,7 +6,9 @@ This project aims to develop a reliable and reproducible data-analysis pipeline 
 ## Contents
 - [Data](#data)
 - [Folderstructure](#folderstructure)
-- [Packages and dependancies](#packages-and-dependencies)
+- [Packages and dependencies](#packages-and-dependencies)
+
+___
 
 ## Data
 In this project publicly available **DroNc-seq data** is used from the entorhinal cortex published by **Grubman et al.** (GEO ID: [GSE138852](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE138852)), containing nuclei from six Alzheimer patients and six controls (13,214 nuclei total).
@@ -37,14 +39,20 @@ In this project publicly available **DroNc-seq data** is used from the entorhina
 │   └── filtered_gene_bc_matrices
 └── README.md
 ```
+___
 
 ## Packages and dependencies
-- ```miniconda```
-- ```sra-tools```
-- ```STAR```
-- ```Seurat```
-- ```here```
-- ```patchwork```
-- ```dyplr```
-- 
+Prior to analysis the following packages need to be installed;
+
+| Package         | Version |
+|-----------------|---------|
+| ```miniconda``` |         |
+| ```sra-tools``` |         |
+|```STAR```       |         |
+| ```Seurat```    |         |
+|```here```       |         |
+|```patchwork```  |         |
+|```dyplr```      |         |
+
+
 
