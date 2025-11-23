@@ -7,6 +7,7 @@ This project aims to develop a reliable and reproducible data-analysis pipeline 
 - [Data](#data)
 - [Folderstructure](#folderstructure)
 - [Packages and dependencies](#packages-and-dependencies)
+- [Authors and contact](#authors-and-contact)
 
 ___
 
@@ -53,6 +54,13 @@ Prior to analysis the following packages need to be installed;
 |```here```       |         |
 |```patchwork```  |         |
 |```dyplr```      |         |
+
+---
+### Authors and contact
+__Contributor:__ Meryem Stroosma
+__E-mail:__ meryem.stroosma@gmail.com
+__GitHub User:__ https://github.com/mstroosma
+__GitHub Repository:__ https://github.com/ProjecticumDlerpDs/ad_transcriptomics_dge.git
 
 
 

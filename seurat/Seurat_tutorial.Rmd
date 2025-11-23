@@ -6,7 +6,7 @@ output:
   pdf_document:
     latex_engine: xelatex
 
-# Tell Pandoc/LaTeX to use colored links
+# Use colours for hyperlinks
 colorlinks: true
 linkcolor: purple
 urlcolor: purple
@@ -24,6 +24,13 @@ header-includes:
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
+## Content
+- [Introduction](#introduction)
+- [Purpose](#purpose)
+- [Data](#data)
+- [Packages](#packages)
+- [Loading the data](loading-the-dataset-and-creating-a-seurat-object)
+
 
 ## Introduction
 This RMarkdown contains a brief summary of the R package Seurat. Seurat is used for the analysis of single-cell RNA sequencing data, providing tools for data preprocessing, quality control, normalization, dimensionality reduction, clustering, differential expression, and cell-type annotation. Besides analyzing a dataset Seurat can also be used to create a variaty of plots to visualize the data. 
@@ -39,10 +46,10 @@ The data that is used in this RMarkdown can be accessed [here](https://cf.10xgen
 ### Packages
 Prior to analysis several packages need to be loaded. The required packages are the following:
 
-* __dplyr__: this package is used by Seurat for data manipulation.
-* __Seurat__: this package needs to be loaded prior to running any Seurat specific functions.
-* __patchwork__: the patchwork package can be used to combine several plots into a single figure.
-* __here__: this package is used to make sure the file paths are reproducible.
+* ```__dplyr__```: this package is used by Seurat for data manipulation.
+* ```__Seurat__```: this package needs to be loaded prior to running any Seurat specific functions.
+* ```__patchwork__```: the patchwork package can be used to combine several plots into a single figure.
+* ```__here__```: this package is used to make sure the file paths are reproducible.
 
 ```{r Loading packages, echo=FALSE, include=FALSE}
 # Load the required packages
@@ -54,6 +61,8 @@ library(here)
 
 
 ### Loading the dataset and creating a Seurat object
+In order to perform analysis with Seurat, the data first needs to be loaded. This is done with ```Read10X()``` which is a Seurat function that can be used to load 10X genomics files such as matrices and .tsv files.
+After loading the dataset, the function ```CreateSeuratObject()``` is used to create a Seurat object that contains the raw data. In this object several filters can be applied or altered, which is shown in the following sections.
 ```{r Load the dataset, include=FALSE}
 # Load the PBMC dataset
 pbmc.data <- Read10X(data.dir = here("seurat", "filtered_gene_bc_matrices", "hg19"))
@@ -63,3 +72,5 @@ pbmc <- CreateSeuratObject(counts = pbmc.data, project = "pbmc3k", min.cells = 3
 pbmc
 
 ```
+
+### 
