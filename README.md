@@ -31,10 +31,11 @@ In this project publicly available **DroNc-seq data** is used from the entorhina
 │   ├── 03_get_genome_reference.sh
 │   ├── 04_create_star_index.sh
 │   └── 05_STARsolo_alignment.sh
-└── seurat
-    ├── Seurat_tutorial.Rmd
-    ├── Seurat_tutorial.pdf
-    └── filtered_gene_bc_matrices
+├── seurat
+│   ├── Seurat_tutorial.Rmd
+│   ├── Seurat_tutorial.pdf
+│   └── filtered_gene_bc_matrices
+└── README.md
 ```
 
 ## Packages and dependencies
