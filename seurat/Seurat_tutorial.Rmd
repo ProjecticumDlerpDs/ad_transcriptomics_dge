@@ -39,7 +39,7 @@ The data that is used in this RMarkdown can be accessed [here](https://cf.10xgen
 ### Packages
 Prior to analysis several packages need to be loaded. The required packages are the following:
 
-* __dplyr__: this package is used by Seurat for data manipulation.  
+* __dplyr__: this package is used by Seurat for data manipulation.
 * __Seurat__: this package needs to be loaded prior to running any Seurat specific functions.
 * __patchwork__: the patchwork package can be used to combine several plots into a single figure.
 * __here__: this package is used to make sure the file paths are reproducible.
