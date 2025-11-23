@@ -1,0 +1,65 @@
+---
+title: "Seurat_tutorial"
+author: "Meryem Stroosma"
+date: "`r Sys.Date()`"
+output: 
+  pdf_document:
+    latex_engine: xelatex
+
+# Tell Pandoc/LaTeX to use colored links
+colorlinks: true
+linkcolor: purple
+urlcolor: purple
+citecolor: purple
+
+header-includes:
+  - \usepackage{fontspec}
+  - \usepackage{fancyvrb}
+  - \setmainfont{DejaVu Sans Condensed}
+  - \setsansfont{DejaVu Sans}
+  - \setmonofont{DejaVu Sans Mono}
+  - \DefineVerbatimEnvironment{Highlighting}{Verbatim}{fontsize=\footnotesize,commandchars=\\\{\}}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Introduction
+This RMarkdown contains a brief summary of the R package Seurat. Seurat is used for the analysis of single-cell RNA sequencing data, providing tools for data preprocessing, quality control, normalization, dimensionality reduction, clustering, differential expression, and cell-type annotation. Besides analyzing a dataset Seurat can also be used to create a variaty of plots to visualize the data. 
+The summary in this RMarkdown is based on the [Seurat guided clustering tutorial](https://satijalab.org/seurat/articles/pbmc3k_tutorial).
+
+## Purpose
+The purpose of this RMarkdown is to understand the different functionalities of Seurat, and to learn how to use Seurat 
+for analyzing the [GSE138852](https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSE138852&format=file&file=GSE138852%5Fcounts%2Ecsv%2Egz) count matrix.
+
+## Data
+The data that is used in this RMarkdown can be accessed [here](https://cf.10xgenomics.com/samples/cell/pbmc3k/pbmc3k_filtered_gene_bc_matrices.tar.gz). This is a dataset of Peripheral Blood Mononuclear Cells (PBMC) freely available from 10X Genomics. This dataset is also used in the [Seurat guided clustering tutorial](https://satijalab.org/seurat/articles/pbmc3k_tutorial).
+
+### Packages
+Prior to analysis several packages need to be loaded. The required packages are the following:
+
+* __dplyr__: this package is used by Seurat for data manipulation.  
+* __Seurat__: this package needs to be loaded prior to running any Seurat specific functions.
+* __patchwork__: the patchwork package can be used to combine several plots into a single figure.
+* __here__: this package is used to make sure the file paths are reproducible.
+
+```{r Loading packages, echo=FALSE, include=FALSE}
+# Load the required packages
+library(dplyr)
+library(Seurat)
+library(patchwork)
+library(here)
+```
+
+
+### Loading the dataset and creating a Seurat object
+```{r Load the dataset, include=FALSE}
+# Load the PBMC dataset
+pbmc.data <- Read10X(data.dir = here("seurat", "filtered_gene_bc_matrices", "hg19"))
+
+# Initialize the Seurat object with the raw (non-normalized data).
+pbmc <- CreateSeuratObject(counts = pbmc.data, project = "pbmc3k", min.cells = 3, min.features = 200)
+pbmc
+
+```
