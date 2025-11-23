@@ -57,10 +57,11 @@ Prior to analysis the following packages need to be installed;
 
 ---
 ### Authors and contact
-__Contributor:__ Meryem Stroosma
-__E-mail:__ meryem.stroosma@gmail.com
-__GitHub User:__ https://github.com/mstroosma
-__GitHub Repository:__ https://github.com/ProjecticumDlerpDs/ad_transcriptomics_dge.git
+
+- __Contributor:__ Meryem Stroosma
+- __E-mail:__ meryem.stroosma@gmail.com
+- __GitHub User:__ https://github.com/mstroosma
+- __GitHub Repository:__ https://github.com/ProjecticumDlerpDs/ad_transcriptomics_dge.git
 
 
 
