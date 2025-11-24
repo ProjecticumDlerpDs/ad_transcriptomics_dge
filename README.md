@@ -45,15 +45,15 @@ ___
 ## Packages and dependencies
 Prior to analysis the following packages need to be installed;
 
-| Package         | Version |
-|-----------------|---------|
-| ```miniconda``` |         |
-| ```sra-tools``` |         |
-|```STAR```       |         |
-| ```Seurat```    |         |
-|```here```       |         |
-|```patchwork```  |         |
-|```dyplr```      |         |
+| Package         | Version     |
+|-----------------|-------------|
+| ```miniconda``` |```25.3.1``` |
+| ```sra-tools``` |```3.2.1.1```|
+|```STAR```       |```2.7.11b```|
+| ```Seurat```    |```5.3.1.``` |
+|```here```       |```1.0.1.``` |
+|```patchwork```  |```1.3.2.``` |
+|```dyplr```      |```1.1.4.``` |
 
 ---
 ### Authors and contact
