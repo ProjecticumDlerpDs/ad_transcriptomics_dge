@@ -46,10 +46,10 @@ The data that is used in this RMarkdown can be accessed [here](https://cf.10xgen
 ### Packages
 Prior to analysis several packages need to be loaded. The required packages are the following:
 
-* ```__dplyr__```: this package is used by Seurat for data manipulation.
-* ```__Seurat__```: this package needs to be loaded prior to running any Seurat specific functions.
-* ```__patchwork__```: the patchwork package can be used to combine several plots into a single figure.
-* ```__here__```: this package is used to make sure the file paths are reproducible.
+ * ```dplyr```: this package is used by Seurat for data manipulation.
+ * ```Seurat```: this package needs to be loaded prior to running any Seurat specific functions.
+ * ```patchwork```: the patchwork package can be used to combine several plots into a single figure.
+ * ```here```: this package is used to make sure the file paths are reproducible.
 
 ```{r Loading packages, echo=FALSE, include=FALSE}
 # Load the required packages
@@ -73,4 +73,41 @@ pbmc
 
 ```
 
-### 
+### Pre-processing of the dataset
+To make sure the data that will be analyzed is reliable it is important that low quality cells are removed from the dataset. In this case the quality doesn't refer to a Phred score (read quality), but to the amount of unique genes per cell, the percentage of mitochondrial genes and the total number of molecules per cell;
+
+ - The number of unique genes per cell are relevant since too few genes compared to the rest of the cells could mean that sequencing of this particular cell was insufficient or that the droplet did not contain a cell. If the number of genes is higher it could mean that two or more cells were captured in the same droplet.
+ - The number of counts says something about the number of different molecules or Unique Molecular Identifiers (UMIs) in one cell. If this number is too low it could mean that this is a poor capture and if this number is too high it could mean that there might be more then one cell in a droplet.
+ - The percentage of mitochondrial genes are a good indication about the general health of the cell, if this percentage is high it usually means that the cell is dying or stressed. Since it might not be representative for the condition that is analysed it is better to filter this out. 
+ 
+The first step in pre-processing is adding a column to the dataframe with the percentage of mitochondrial genes. To give a general idea of what the dataframe looks like after adding this column the first five rows are shown in the chunk below.
+In the first column the cell barcodes are shown, the second column contains the original identity of the sample the third, fourth and fifth column contain the number of the number of counts, unique genes and the percentage of mitochondrial genes. 
+ 
+```{r Pre-processing of the dataset, echo=FALSE}
+# Add a column with [[ to the Seurat object containing info about the percentage of mitochondrial genes, PercentageFeatureSet searches for genes that start with MT in the pbmc dataset.
+pbmc[["percent_mt"]] <- PercentageFeatureSet(pbmc, pattern = "^MT-")
+
+# Show the first 5 lines of the meta data frame of Seurat object pbmc
+head(pbmc@meta.data, 5)
+```
+ 
+The dataframe can also be visualised in a plot, this XXXXX
+
+```{r Visualize dataframe, echo=FALSE, warning=FALSE, fig.cap="This plot shows the data of pbmc dataframe in three separate violin plots"}
+# Visualize dataframe as a violin plot
+VlnPlot(pbmc, features = c("nFeature_RNA", "nCount_RNA", "percent_mt"), ncol = 3)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
