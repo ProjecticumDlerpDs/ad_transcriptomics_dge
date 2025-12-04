@@ -15,6 +15,8 @@ citecolor: purple
 header-includes:
   - \usepackage{fontspec}
   - \usepackage{fancyvrb}
+  - \usepackage{placeins}
+  - \usepackage{float} 
   - \setmainfont{DejaVu Sans Condensed}
   - \setsansfont{DejaVu Sans}
   - \setmonofont{DejaVu Sans Mono}
@@ -29,7 +31,7 @@ knitr::opts_chunk$set(echo = TRUE)
 - [Purpose](#purpose)
 - [Data](#data)
 - [Packages](#packages)
-- [Loading the data](loading-the-dataset-and-creating-a-seurat-object)
+- [Loading the data](#loading-the-dataset-and-creating-a-seurat-object)
 
 
 ## Introduction
@@ -57,6 +59,7 @@ library(dplyr)
 library(Seurat)
 library(patchwork)
 library(here)
+library(ggplot2)
 ```
 
 
@@ -74,9 +77,9 @@ pbmc
 ```
 
 ### Pre-processing of the dataset
-To make sure the data that will be analyzed is reliable it is important that low quality cells are removed from the dataset. In this case the quality doesn't refer to a Phred score (read quality), but to the amount of unique genes per cell, the percentage of mitochondrial genes and the total number of molecules per cell;
+To make sure the data that will be analyzed is reliable it is important that low quality cells are removed from the dataset. In this case the quality doesn't refer to a Phred score (read quality), but to the amount of unique features per cell, the percentage of mitochondrial genes and the total number of molecules per cell;
 
- - The number of unique genes per cell are relevant since too few genes compared to the rest of the cells could mean that sequencing of this particular cell was insufficient or that the droplet did not contain a cell. If the number of genes is higher it could mean that two or more cells were captured in the same droplet.
+ - The number of unique features per cell are relevant since too few features compared to the rest of the cells could mean that sequencing of this particular cell was insufficient or that the droplet did not contain a cell. If the number of features is higher it could mean that two or more cells were captured in the same droplet. In most cases a feature is a gene, but this doesn't always have to be the case, sometimes this might be regulatory RNA instead. 
  - The number of counts says something about the number of different molecules or Unique Molecular Identifiers (UMIs) in one cell. If this number is too low it could mean that this is a poor capture and if this number is too high it could mean that there might be more then one cell in a droplet.
  - The percentage of mitochondrial genes are a good indication about the general health of the cell, if this percentage is high it usually means that the cell is dying or stressed. Since it might not be representative for the condition that is analysed it is better to filter this out. 
  
@@ -91,15 +94,46 @@ pbmc[["percent_mt"]] <- PercentageFeatureSet(pbmc, pattern = "^MT-")
 head(pbmc@meta.data, 5)
 ```
  
-The dataframe can also be visualised in a plot, this XXXXX
+The dataframe can also be visualised in a plot, in figure 1 a violin plot is shown of the following metrics;
 
-```{r Visualize dataframe, echo=FALSE, warning=FALSE, fig.cap="This plot shows the data of pbmc dataframe in three separate violin plots"}
+ - __nFeature_RNA__: this plot shows the unique number of genes
+ - __nCount_RNA__: this plot shows the total amount of RNA molecules detected
+ - __percent_mt__: this plot shows the percentage of mitochondrial genes
+In the violin plots in figure 1 each dot represents the datapoint for one single cell, on the x-axis the identity is shown, on the y-axis the amount is shown of the metric that is plotted.
+
+\FloatBarrier
+```{r Visualize dataframe, echo=FALSE, warning=FALSE, fig.cap="Violin plot of QC-metrics, in the first plot the unique number of genes per cell are visualised, in the second plot the amount of RNA molecules is shown and in the last plot the percentage of mitochondrial genes is shown"}
 # Visualize dataframe as a violin plot
 VlnPlot(pbmc, features = c("nFeature_RNA", "nCount_RNA", "percent_mt"), ncol = 3)
 ```
+\FloatBarrier
+With the function ```FeatureScatter()``` a scatterplot is generated of two QC metrics. The first argument should contain the Seurat object where the QC metrics are stored. Then the x-axis should be defined with the argument ```feature1 =```, in figure 2 this was defined as nCount_RNA. The y-axis can be defined in a similar way using ```feature2 =```, in the left plot in figure 2 this was defined as *percent_mt* and in the right plot this was defined as *nFeature_RNA*. The title of the plot is the correlation value, this could be changed by the argument plot.cor, which can be set to TRUE or FALSE. ```FeatureScatter()``` also has several arguments that could be used to modify the plots, for example if the dataset contains cells with different identities these could be grouped in different colours with argument group.by. 
 
+\FloatBarrier
+```{r Visualize dataframe as scatterplot, echo=FALSE, warning =FALSE, fig.cap="Scatterplot to visualise a relationship between the percentage of mitochondrial RNA versus the total amount of RNA and to visualize the relationship between the total amount of features and the total amount of RNA"}
 
+# Visualize dataframe in scatterplots
+plot1 <- FeatureScatter(pbmc,
+                        feature1 = "nCount_RNA",
+                        feature2 = "percent_mt",
+                        plot.cor = FALSE) +
+  ggtitle("Mitochondrial percentage\nverus RNA counts") +
+  xlab("Total RNA counts") +
+  ylab("Percentage MT genes") +
+  theme_classic()
+plot2 <- FeatureScatter(pbmc, 
+                        feature1 = "nCount_RNA",
+                        feature2 = "nFeature_RNA",
+                        plot.cor = FALSE) +
+  ggtitle("RNA features\nversus RNA counts") +
+  xlab("Total RNA counts") +
+  ylab("RNA features") +
+  theme_classic()
+plot1 + plot2
+```
+\FloatBarrier
 
+The plots in figure 1 and figure 2 contain the unfiltered data of the pbmc dataframe. In order to 
 
 
 

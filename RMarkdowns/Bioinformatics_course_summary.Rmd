@@ -1,0 +1,181 @@
+---
+title: "Samenvatting van verkregen bioinformatica vaardigheden voor fase DLERP-B"
+author: "Meryem Stroosma"
+date: "`r Sys.Date()`"
+output:
+  pdf_document:
+    latex_engine: xelatex
+header-includes:
+  - \usepackage{fontspec}
+  - \usepackage{fancyvrb}
+  - \setmainfont{DejaVu Sans Condensed}
+  - \setsansfont{DejaVu Sans}
+  - \setmonofont{DejaVu Sans Mono}
+  - \DefineVerbatimEnvironment{Highlighting}{Verbatim}{fontsize=\footnotesize,commandchars=\\\{\}}
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(eval = FALSE)
+```
+
+## Inleiding
+
+In dit RMarkdown-document is een beknopte samenvatting weergegeven waarmee de kennis en vaardigheden die tijdens de bioinformatica-cursussen zijn opgedaan, worden aangetoond. De cursussen waarmee de verschillende vaardigheden zijn opgedaan zijn onder de volgende hyperlinks terug te vinden;  
+
+* [DAUR1](https://lesmaterialen.rstudio.hu.nl/daur1-reader/).  
+* [DAUR2](https://lesmaterialen.rstudio.hu.nl/daur2-reader/).  
+* [Advanced Bioinformatics](https://lesmaterialen.rstudio.hu.nl/ab-2024-reader/cursus-informatie.html).  
+* [Workflows](https://lesmaterialen.rstudio.hu.nl/workflows-reader/) - module 1 t/m 4.  
+
+## Folderstructuren en datamanagement 
+Om een bioinformatica overzichtelijk te houden is het van belang dat de folderstructuur orderlijk en logisch is opgebouwd. In een data-analyse pipeline worden veel verschillende soorten bestanden gebruikt waaronder; ruwe fastq-bestanden, scripts, referenties, gefilterde bestanden enzovoorts. Om met efficiënt al deze verschillende bestanden om te gaan wordt gebruik gemaakt van onderstaande folderstructuur. Deze structuur maakt het makkelijker om data terug te vinden, om goed gedefinieerde paden te maken voor in scripts en voorkomt een eindeloze verdieping in folders.
+
+ad_transcriptomics_dge/.   
+├── ad_transcriptomics_dge.Rproj.   
+├── analysis.   
+├── processed_data.   
+├── raw_data.   
+│   ├── SRR_Acc_List.txt.   
+│   └── fastq_data.   
+├── references.   
+│   ├── GRCh38.primary_assembly.genome.fa.gz    
+│   ├── STAR_index.   
+│   └── gencode.v49.annotation.gtf.gz.   
+└── scripts.   
+    ├── 01_download_SRR_fastq.sh.   
+    ├── 02_get_genome_reference.sh.   
+    ├── 03_create_star_index.sh.   
+    └── nohup.out. 
+
+7 directories, 8 files
+
+
+### Het maken van folders 
+Voor het aanmaken van nieuwe folders wordt gebruik gemaakt van de command **mkdir**, deze kan ook in een script gebruikt worden wanneer bijvoorbeeld een output directory aangemaakt dient te worden. Een voorbeeld hiervan is hieronder weergegeven
+
+```{bash}
+# Maak een nieuwe folder in bepaalde directory met behulp van mkdir, -p zorgt 
+# ervoor dat eventueel de bovenliggende folders ook worden aangemaakt en zorgt 
+# ervoor dat het script niet crasht wanneer de folder al bestaat 
+mkdir -p $HOME/raw_data/naam_nieuwe_folder
+```
+
+### Omgaan met grote bestanden
+Wanneer gewerkt wordt met grote bestanden zoals fastq-bestanden welke worden gegenereerd bij sequencing experimenten neemt dit veel ruimte in beslag. Om met deze bestanden te werken zonder onnodig veel ruimte op de server in te nemen worden bestanden gecomprimeerd wanneer deze niet in gebruik zijn. Dit kan met de command **gzip -9**, deze command kan ook in een script verwerkt worden zodat bestanden enkel gedecomprimeerd zijn wanneer ze in gebruik zijn. Een voorbeeld is hieronder weergegeven; 
+
+``` {bash}
+# Decomprimeer het bestand met gunzip (kan ook met gzip -d)
+gunzip voorbeeld.fastq.gz
+
+# Voorbeeldhandeling met het gedecomprimeerde bestand
+head -n 10 voorbeeld.fastq
+
+# Comprimeer het bestand weer met gzip -9 (-9 is de hoogst mogelijke compressie)
+gzip -9 voorbeeld.fastq
+```
+
+## Gebruik van Conda
+Conda is een package en environment beheersysteem. Met behulp van Conda kunnen verschillende **environments** aangemaakt worden waarin packages kunnen worden geïnstalleerd. Zo'n environment kan omschreven worden als een geïsoleerde omgeving waar bepaalde versies van packages kunnen worden geïnstalleerd. Ook kun je een environment gebruiken om enkel packages met specifieke dependencies te installeren (een dependency wil zeggen dat ze enkel goed werken in combinatie met andere packages of met specifieke versies). Door met Conda te werken is het mogelijk om altijd de juiste versie te installeren en kunnen conflicten met betrekking tot dependencies worden voorkomen. Hoe Conda wordt geïnstalleerd is in de volgende chunk met code weergegeven. 
+
+```{bash}
+# Download de laatste versie van een conda installatiescript met behulp van wget, 
+# wget kan worden gebruikt om inhoud van het internet te downloaden
+wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
+
+# Run met behulp van bash het script dat is gedownload, 
+# -b geeft aan dat dit zonder prompts gebeurt.
+bash Miniconda3-latest-Linux-x86_64.sh -b
+
+# Controleer of conda succesvol is geïnstalleerd
+conda --version
+```
+
+Na installatie kan Conda worden gebruikt, hoe Conda gebruikt wordt is in onderstaande chunk weergegeven;
+```{bash}
+# Maak een nieuwe environment aan in Conda
+conda create -n nieuwe_environment
+
+# Controleer of de environment is aangemaakt, conda info --envs 
+# genereert een lijst met alle environments
+conda info --envs
+
+# Activeer een environment met behulp van conda activate, na activatie is aan 
+# het begin van de promptregel de environment weergegeven tussen haakjes
+conda activate nieuwe_environment
+
+# Deactiveer een environment met behulp van conda deactivate, na deactivatie 
+# is aan het begin van de promptregel base weergegeven tussen haakjes
+conda deactivate nieuwe_environment
+```
+
+## Inladen van bestanden
+Gedurende DLERP-B wordt gewerkt met data uit onderzoek van Grubman *et al.* 2019, dit is een dataset die bestaat uit grote .fastq bestanden welke onder [GSE138852](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE138852) kunnen worden teruggevonden. Het formaat van deze bestanden varieert van 1.5 Gb tot 5.5 Gb, waardoor het downloaden erg lang kan duren. Om deze bestanden (op de achtergrond) te kunnen downloaden is een script geschreven waarmee het downloaden geautomatiseerd wordt. Dit script is in onderstaande chunk weergegeven. 
+
+```{bash 01_download_SRR_fastq}
+#!/bin/bash
+# Script to download .fastq-files from a list with SRR ID's with fasterq-dump
+
+# Install packages 
+conda install bioconda::sra-tools
+
+# Stop when errors occur
+set -euo pipefail
+
+# Path to directories 
+project="$HOME/ad_transcriptomics_dge"
+SRR_list="$project/raw_data/SRR_Acc_List.txt" 
+output="$project/raw_data/fastq_data"
+
+# Create output directory
+mkdir -p "$output"
+
+while read -r SRR || [[ -n "$SRR" ]]; do
+    [[ -z "$SRR" ]] && continue   # skip empty lines
+    echo ">>> Downloading $SRR ..."
+    fastq-dump "$SRR" --gzip -O "$output"
+    # Result: $output/${SRR}.fastq.gz
+done < "$SRR_list"
+
+echo "Files are saved in $output"
+```
+
+Om het script voor het downloaden van de .fastq bestanden op de achtergrond te draaien wordt gebruik gemaakt van **nohup &**, in de command line ziet dat er als volgt uit;
+```{bash}
+nohup bash 01_download_SRR_fastq.sh &
+```
+
+## Het maken van figuren
+Om data inzichtelijk te maken en goed over te kunnen brengen kan het nuttig zijn hier figuren bij te maken. In DAUR1 is uitvoerig behandeld hoe data geplot kan worden met packages zoals ggplot. In onderstaande chunk is de Olive dataset gebruikt om een staafdiagram maken met hierin het palmitinezuur percentage van de lipide fractie in olijfolie. Deze dataset is enkel als voorbeeld gebruikt, gedurende het project voor DLERP-B zullen er figuren gemaakt worden die van toepassing zijn op de onderzoeksvraag.
+```{r Het maken van figuren, fig.width=5, fig.height=3, out.width='70%', echo=TRUE, eval=TRUE, message=FALSE}
+# Laadt de juiste packages, dslabs bevat de dataset, ggplot2 kan worden gebruikt 
+# voor het plotten van een staafdiagram en tidyverse wordt gebruikt 
+# voor het organiseren van data.
+library(dslabs)
+library(ggplot2)
+library(tidyverse)
+
+# Laad de olive set in een nieuwe variabele met enkel de kolommen van interesse
+olive_palmitic <- olive %>%
+  select(region, area, palmitic)
+
+# Maak groepen per regio, bereken SD en het gemiddelde percentage palmitinezuur.
+# Plot met ggplot in een staafdiagram met errorbars en labels.
+olive_palmitic %>%
+  group_by(region) %>%
+  summarise(mean_palmitic = mean(palmitic),
+            stdev = sd(palmitic)) %>%
+  ggplot(aes(x = region, y = mean_palmitic, fill = region)) +
+  geom_col() +
+  geom_errorbar(aes(ymin = mean_palmitic - stdev, 
+                    ymax = mean_palmitic + stdev), width = .2) +
+  theme_minimal() +
+  labs(
+    title = "Gemiddelde percentage palmitinezuur in de lipide fractie van 
+    olijfolie per regio in Italië",
+    subtitle = "De errorbar geeft een standaarddeviatie weer",
+    x = "Regio",
+    y = "Gemiddelde hoeveelheid palmitinezuur (%)"
+  ) +
+  theme(legend.position = "none")
+```
