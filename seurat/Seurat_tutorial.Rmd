@@ -5,6 +5,7 @@ date: "`r Sys.Date()`"
 output: 
   pdf_document:
     latex_engine: xelatex
+    fig_caption: true
 
 # Use colours for hyperlinks
 colorlinks: true
@@ -15,8 +16,9 @@ citecolor: purple
 header-includes:
   - \usepackage{fontspec}
   - \usepackage{fancyvrb}
-  - \usepackage{placeins}
+  - \usepackage[section]{placeins}
   - \usepackage{float} 
+  - \usepackage{blindtext}
   - \setmainfont{DejaVu Sans Condensed}
   - \setsansfont{DejaVu Sans}
   - \setmonofont{DejaVu Sans Mono}
@@ -32,6 +34,8 @@ knitr::opts_chunk$set(echo = TRUE)
 - [Data](#data)
 - [Packages](#packages)
 - [Loading the data](#loading-the-dataset-and-creating-a-seurat-object)
+- [Pre-processing of the dataset](#pre-processing-of-the-dataset)
+- [Normalizing the dataset](#normalizing-the-dataset)
 
 
 ## Introduction
@@ -53,7 +57,7 @@ Prior to analysis several packages need to be loaded. The required packages are 
  * ```patchwork```: the patchwork package can be used to combine several plots into a single figure.
  * ```here```: this package is used to make sure the file paths are reproducible.
 
-```{r Loading packages, echo=FALSE, include=FALSE}
+```{r Load_packages, echo=FALSE, include=FALSE}
 # Load the required packages
 library(dplyr)
 library(Seurat)
@@ -66,7 +70,7 @@ library(ggplot2)
 ### Loading the dataset and creating a Seurat object
 In order to perform analysis with Seurat, the data first needs to be loaded. This is done with ```Read10X()``` which is a Seurat function that can be used to load 10X genomics files such as matrices and .tsv files.
 After loading the dataset, the function ```CreateSeuratObject()``` is used to create a Seurat object that contains the raw data. In this object several filters can be applied or altered, which is shown in the following sections.
-```{r Load the dataset, include=FALSE}
+```{r Load_dataset, include=FALSE}
 # Load the PBMC dataset
 pbmc.data <- Read10X(data.dir = here("seurat", "filtered_gene_bc_matrices", "hg19"))
 
@@ -86,7 +90,7 @@ To make sure the data that will be analyzed is reliable it is important that low
 The first step in pre-processing is adding a column to the dataframe with the percentage of mitochondrial genes. To give a general idea of what the dataframe looks like after adding this column the first five rows are shown in the chunk below.
 In the first column the cell barcodes are shown, the second column contains the original identity of the sample the third, fourth and fifth column contain the number of the number of counts, unique genes and the percentage of mitochondrial genes. 
  
-```{r Pre-processing of the dataset, echo=FALSE}
+```{r Preprocessing_of_dataset, echo=FALSE}
 # Add a column with [[ to the Seurat object containing info about the percentage of mitochondrial genes, PercentageFeatureSet searches for genes that start with MT in the pbmc dataset.
 pbmc[["percent_mt"]] <- PercentageFeatureSet(pbmc, pattern = "^MT-")
 
@@ -101,16 +105,18 @@ The dataframe can also be visualised in a plot, in figure 1 a violin plot is sho
  - __percent_mt__: this plot shows the percentage of mitochondrial genes
 In the violin plots in figure 1 each dot represents the datapoint for one single cell, on the x-axis the identity is shown, on the y-axis the amount is shown of the metric that is plotted.
 
-\FloatBarrier
-```{r Visualize dataframe, echo=FALSE, warning=FALSE, fig.cap="Violin plot of QC-metrics, in the first plot the unique number of genes per cell are visualised, in the second plot the amount of RNA molecules is shown and in the last plot the percentage of mitochondrial genes is shown"}
+\newpage 
+
+```{r Visualize_dataframe, echo=FALSE, warning=FALSE, fig.cap="Violin plot of QC-metrics, in the first plot the unique number of genes per cell are visualised, in the second plot the amount of RNA molecules is shown and in the last plot the percentage of mitochondrial genes is shown", fig.pos='!htbp'}
 # Visualize dataframe as a violin plot
 VlnPlot(pbmc, features = c("nFeature_RNA", "nCount_RNA", "percent_mt"), ncol = 3)
 ```
-\FloatBarrier
-With the function ```FeatureScatter()``` a scatterplot is generated of two QC metrics. The first argument should contain the Seurat object where the QC metrics are stored. Then the x-axis should be defined with the argument ```feature1 =```, in figure 2 this was defined as nCount_RNA. The y-axis can be defined in a similar way using ```feature2 =```, in the left plot in figure 2 this was defined as *percent_mt* and in the right plot this was defined as *nFeature_RNA*. The title of the plot is the correlation value, this could be changed by the argument plot.cor, which can be set to TRUE or FALSE. ```FeatureScatter()``` also has several arguments that could be used to modify the plots, for example if the dataset contains cells with different identities these could be grouped in different colours with argument group.by. 
 
-\FloatBarrier
-```{r Visualize dataframe as scatterplot, echo=FALSE, warning =FALSE, fig.cap="Scatterplot to visualise a relationship between the percentage of mitochondrial RNA versus the total amount of RNA and to visualize the relationship between the total amount of features and the total amount of RNA"}
+With the function ```FeatureScatter()``` a scatterplot is generated of two QC metrics. The first argument should contain the Seurat object where the QC metrics are stored. Then the x-axis should be defined with the argument ```feature1 =```, in figure 2 this was defined as nCount_RNA. The y-axis can be defined in a similar way using ```feature2 =```, in the left plot in figure 2 this was defined as *percent_mt* and in the right plot this was defined as *nFeature_RNA*. The title of the plot is the correlation value, this could be changed by the argument plot.cor, which can be set to TRUE or FALSE. ```FeatureScatter()``` also has several arguments that could be used to modify the plots, for example if the dataset contains cells with different identities these could be grouped in different colours with argument ```group.by```. 
+
+\newpage
+
+```{r Visualize_dataframe_as_scatterplot, echo=FALSE, warning =FALSE, fig.cap="Scatterplot to visualise a relationship between the percentage of mitochondrial RNA versus the total amount of RNA and to visualize the relationship between the total amount of features and the total amount of RNA", fig.pos='!htbp'}
 
 # Visualize dataframe in scatterplots
 plot1 <- FeatureScatter(pbmc,
@@ -131,17 +137,156 @@ plot2 <- FeatureScatter(pbmc,
   theme_classic()
 plot1 + plot2
 ```
-\FloatBarrier
 
-The plots in figure 1 and figure 2 contain the unfiltered data of the pbmc dataframe. In order to 
+The plots in figure 1 and figure 2 contain the unfiltered data of the pbmc dataframe. These plots can help to figure out which cells to use in further analyses and which to filter out. To give an idea of how the plots in figure 1 and figure 2 would look after filtering the data the pbmc dataframe was plotted again after applying the following filters:
 
+ - __nFeature_RNA__: Only cells with 200 - 1500 unique features are shown. This means ```nFeature_RNA``` should be between 200 and 1500 for each cell.
+ - __percent_mt__: Only cells that express less then 5 percent mitochondrial genes are shown. This means ```percent_mt``` should be < 5.
 
+The plots of the filtered pbmc dataframe are shown in figure 3 and figure 4.
 
+```{r Adjust_filtering_of_dataset, echo=FALSE}
+pbmc_filtered <- subset(pbmc, subset = nFeature_RNA > 200 & nFeature_RNA < 1500 & percent_mt < 5)
+```
 
+\newpage 
 
+```{r visualize_filtered_dataframe, echo=FALSE, warning=FALSE, fig.cap="Violin plot of filtered QC-metrics. In the first plot the unique number of genes per cell is visualised, in the second plot the amount of RNA molecules is shown and in the last plot the percentage of mitochondrial genes is shown.", fig.pos='!htbp'} 
+# Visualize dataframe as a violin plot
+VlnPlot(pbmc_filtered, features = c("nFeature_RNA", "nCount_RNA", "percent_mt"), ncol = 3)
+```
 
+```{r Visualize_filtered_dataframe_as_scatterplot, echo=FALSE, warning =FALSE, fig.cap="Scatterplot of filtered data to visualise a relationship between the percentage of mitochondrial RNA versus the total amount of RNA and to visualize the relationship between the total amount of features and the total amount of RNA", fig.pos='!htbp'}
 
+# Visualize dataframe in scatterplots
+plot1 <- FeatureScatter(pbmc_filtered,
+                        feature1 = "nCount_RNA",
+                        feature2 = "percent_mt",
+                        plot.cor = FALSE) +
+  ggtitle("Mitochondrial percentage\nverus RNA counts") +
+  xlab("Total RNA counts") +
+  ylab("Percentage MT genes") +
+  theme_classic()
+plot2 <- FeatureScatter(pbmc_filtered, 
+                        feature1 = "nCount_RNA",
+                        feature2 = "nFeature_RNA",
+                        plot.cor = FALSE) +
+  ggtitle("RNA features\nversus RNA counts") +
+  xlab("Total RNA counts") +
+  ylab("RNA features") +
+  theme_classic()
+plot1 + plot2
+```
 
+\newpage
+## Normalizing the dataset
+In order to correct for differences in sequencing depth between different cells, dropout events and other differences such as total RNA content per cell a normalization step is required. By normalizing the data, biological differences are detected in a more reliable fashion. There are several methods for normalizing the data, quite often a Log normalization is used and in Seurat this is also an option. The function that can be used to do this in Seurat is ```NormalizeData()```, this function comes with several arguments. For analyzing differential expression in RNA-seq data ```LogNormalize``` is the most suitable argument.
 
+ - ```LogNormalize``` : With this argument feature counts per cell are divided by the total counts and multiplied by the ```scale.factor```, which is the value to which each cell's total UMI count will be normalized to. De default value for scale.factor is 10000 but can be changed if needed. This method could be used to normalize for sequencing depth and works for all the cells in the sample, this method is typically used since this way of normalizing makes all the cells comparable by scaling the total counts to the same value. 
 
+```{r Normalize_data, include=FALSE, warning=FALSE}
+# To normalize the data a new object is created in which the data is normalized by using NormalizeData with argument LogNormalize. In theory this could also be done with the shortened command: pbmc_normalized <- NormalizeData(pbmc_filtered) 
+pbmc_normalized <- NormalizeData(pbmc_filtered, normalization.method = "LogNormalize", scale.factor = 10000)
+```
+
+## Identification of highly variable features
+When analyzing gene expression in general there are thousands of different features that are found. Not all of these features are relevant when analyzing differential gene expression patterns and besides that, using all of these features makes analysis more complicated and time consuming. To perform a reliable and efficient analysis, reducing the amount of features (variables) is a good solution. To determine which variables to analyze and which variables are less relevant the function ```FindVariableFeatures()``` could be used in Seurat. ```FindVariableFeatures``` has several different methods to determine the top variable features: 
+
+ - ```vst```: Vst is short for Variance Stabilizing Transformation. This is the default setting of FindVariableFeatures. Vst looks at the expression level and then finds features whose variance is higher than expected in relation to the mean expression of that feature. This is useful since the relative variance is usually higher for genes that have a lower expression pattern, while this is usually lower for genes that have a higher expression pattern. Vst works in several steps, first it takes the _log(variance)_ and _log(mean)_ and fits a curve using logical polynomial regression (LOESS). This curve makes an estimation of the expected variance given the mean expression of a feature. Then it calculates standardized variance for each feature by _standardized variance (observed variance - expected variance) / expected variance_. Eventually it decides based on the largest values for standardized variance wich features are highle variable.
+ - ```mean.var.plot``` : Mean variance plot or MVP is an older method compared to vst. It works by calculating average expression and dispersion. Then it divides features into bins by looking at the average expression and it calculates a Z-score for dispersion _dispersion = variance / mean_ per bin. The number of bins can be adjusted. This is based on the idea that genes with the same mean expression should have a similar technical variance, when the expression of a gene is different from the mean expression it should be detected with MVP.  
+ - ```dispersion``` : Dispersion is the simplest method in Seurat to identify variable features. Dispersion is the _variance_ divided by the _mean_, this method just looks at the highest dispersion without adjusting for mean expression. Dispersion is therefore the least accurate method since the mean expression could strongly influence the dispersion value.
+ 
+The default method in ```FindVariableFeatures``` is ```vst```, which is also the method that will be used in the next steps.
+
+```{r Find_variable_features, echo=FALSE, warning=FALSE, message=FALSE, fig.cap="Scatterplot of variable features with and without labels", fig.pos='!htbp'}
+pbmc_features <- FindVariableFeatures(pbmc_normalized, selection.method = "vst", nfeatures = 2000)
+
+# Identify the 10 most highly variable genes
+top10 <- head(VariableFeatures(pbmc_features), 10)
+
+# plot variable features with and without labels
+plot1 <- VariableFeaturePlot(pbmc_features)+
+  ggtitle("Features of pbmc dataset") +
+  xlab("Average expression") +
+  ylab("Standardized variance") +
+  theme_classic()+
+    theme(
+    text = element_text(size = 10),        
+    plot.title = element_text(size = 11),  
+    axis.title = element_text(size = 10),
+    axis.text = element_text(size = 9),
+    legend.position = "bottom"
+  )
+plot2 <- LabelPoints(plot = plot1, points = top10, repel = TRUE, size = 3)+
+  ggtitle("Features of pbmc dataset", subtitle = "top 10 most variable features are labeled") +
+  xlab("Average expression") +
+  ylab("Standardized variance") +
+  theme_classic()+
+    theme(
+    text = element_text(size = 10),       
+    plot.title = element_text(size = 11),  
+    axis.title = element_text(size = 10),
+    axis.text = element_text(size = 9),
+    legend.position  = "bottom"
+  )
+plot2
+```
+
+## Data scaling
+To prepare the dataset for Principal Component Analysis (PCA), first scaling of the data needed. Data scaling is performed by centering each feature to have a mean of 0, then each gene variance is scaled to 1 and optionally some variables could be regressed out. If a feature is high in expression variance is naturally higher, if a feature is low in expression variance is naturally lower. By dividing each feature by its standard deviation it is ensured that each gene contributes to PCA without bias. Scaling te data in this way ensures that biological differences are detected in PCA instead of only features that have high expression patterns.
+
+In Seurat the function ```ScaleData()``` is used to scale the data, in this function several arguments could be used to decide which variables to filter.
+
+```{r Scaling_data1, echo=FALSE, warning=FALSE, message=FALSE}
+all.genes <- rownames(pbmc)
+pbmc_scaled1 <- ScaleData(pbmc_features, features = all.genes)
+```
+
+```{r Scaling_data2, echo=FALSE, warning=FALSE, message=FALSE}
+all.genes <- rownames(pbmc)
+pbmc_scaled2 <- ScaleData(pbmc_features, vars.to.regress = "percent_mt")
+```
+
+## Linear Dimension Reduction
+```{r Run_PCA1, echo=FALSE, warning=FALSE, message=FALSE}
+pbmc_PCA1 <- RunPCA(pbmc_scaled1, features = VariableFeatures(object = pbmc_scaled1))
+```
+
+```{r Run_PCA2, echo=FALSE, warning=FALSE, message=FALSE}
+pbmc_PCA2 <- RunPCA(pbmc_scaled2, features = VariableFeatures(object = pbmc_scaled2))
+```
+
+```{r Print_PCA1, echo=FALSE, warning=FALSE, message=FALSE}
+# Examine and visualize PCA results a few different ways
+print(pbmc_PCA1[["pca"]], dims = 1:5, nfeatures = 5)
+```
+
+```{r Print_PCA2, echo=FALSE, warning=FALSE, message=FALSE}
+# Examine and visualize PCA results a few different ways
+print(pbmc_PCA2[["pca"]], dims = 1:5, nfeatures = 5)
+```
+
+```{r Plot_PCA1, echo=FALSE, warning=FALSE, message=FALSE}
+VizDimLoadings(pbmc_PCA1, dims = 1:2, reduction = "pca")
+```
+
+```{r Plot_PCA2, echo=FALSE, warning=FALSE, message=FALSE}
+VizDimLoadings(pbmc_PCA1, dims = 1:2, reduction = "pca")
+```
+
+```{r Dimplot_PCA1, echo=FALSE, warning=FALSE, message=FALSE}
+DimPlot(pbmc_PCA1, reduction = "pca") + NoLegend()
+```
+
+```{r Dimplot_PCA2, echo=FALSE, warning=FALSE, message=FALSE}
+DimPlot(pbmc_PCA2, reduction = "pca") + NoLegend()
+```
+## Sources
+
+ - 1 [Seurat Tutorial](https://satijalab.org/seurat/articles/pbmc3k_tutorial)
+ - 2 [DAUR2 - RNA sequencing part 2](https://lesmaterialen.rstudio.hu.nl/daur2-reader/lesson-2---rna-sequencing-part-2.html#)
+ - 3 [Data normalization for addressing the challenges in the analysis of single-cell transcriptomic datasets](https://link.springer.com/article/10.1186/s12864-024-10364-5)
+ - 4 [Seurat FindVariableFeatures](https://satijalab.org/seurat/reference/findvariablefeatures)
+ - 5 [Comprehensive Integration of Single-Cell Data, Tim Stuart et al.](https://www.cell.com/cell/fulltext/S0092-8674(19)30559-8?_returnURL=https%3A%2F%2Flinkinghub.elsevier.com%2Fretrieve%2Fpii%2FS0092867419305598%3Fshowall%3Dtrue)
+ - 6 [Seurat ScaleData](https://satijalab.org/seurat/reference/scaledata)
 
