@@ -33,13 +33,13 @@ knitr::opts_chunk$set(echo = TRUE)
 - [Purpose](#purpose)
 - [Data](#data)
 - [Packages](#packages)
-- [Loading the data](#loading-the-data-set-and-creating-a-seurat-object)
-- [Pre-processing of the data set](#pre-processing-of-the-data-set)
-- [Normalizing the data set](#normalizing-the-data-set)
+- [Loading the data](#loading-the-dataset-and-creating-a-seurat-object)
+- [Pre-processing of the dataset](#pre-processing-of-the-dataset)
+- [Normalizing the dataset](#normalizing-the-dataset)
 
 
 ## Introduction
-This RMarkdown contains a brief summary of the R package Seurat. Seurat is used for the analysis of single-cell RNA sequencing data, providing tools for data preprocessing, quality control, normalization, dimensionality reduction, clustering, differential expression, and cell-type annotation. Besides analyzing a data set Seurat can also be used to create a variaty of plots to visualize the data. 
+This RMarkdown contains a brief summary of the R package Seurat. Seurat is used for the analysis of single-cell RNA sequencing data, providing tools for data preprocessing, quality control, normalization, dimensionality reduction, clustering, differential expression, and cell-type annotation. Besides analyzing a dataset Seurat can also be used to create a variaty of plots to visualize the data. 
 The summary in this RMarkdown is based on the [Seurat guided clustering tutorial](https://satijalab.org/seurat/articles/pbmc3k_tutorial).
 
 ## Purpose
@@ -47,7 +47,7 @@ The purpose of this RMarkdown is to understand the different functionalities of 
 for analyzing the [GSE138852](https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSE138852&format=file&file=GSE138852%5Fcounts%2Ecsv%2Egz) count matrix.
 
 ## Data
-The data that is used in this RMarkdown can be accessed [here](https://cf.10xgenomics.com/samples/cell/pbmc3k/pbmc3k_filtered_gene_bc_matrices.tar.gz). This is a data set of Peripheral Blood Mononuclear Cells (PBMC) freely available from 10X Genomics. This data set is also used in the [Seurat guided clustering tutorial](https://satijalab.org/seurat/articles/pbmc3k_tutorial).
+The data that is used in this RMarkdown can be accessed [here](https://cf.10xgenomics.com/samples/cell/pbmc3k/pbmc3k_filtered_gene_bc_matrices.tar.gz). This is a dataset of Peripheral Blood Mononuclear Cells (PBMC) freely available from 10X Genomics. This dataset is also used in the [Seurat guided clustering tutorial](https://satijalab.org/seurat/articles/pbmc3k_tutorial).
 
 ### Packages
 Prior to analysis several packages need to be loaded. The required packages are the following:
@@ -67,11 +67,11 @@ library(ggplot2)
 ```
 
 
-### Loading the data set and creating a Seurat object
+### Loading the dataset and creating a Seurat object
 In order to perform analysis with Seurat, the data first needs to be loaded. This is done with ```Read10X()``` which is a Seurat function that can be used to load 10X genomics files such as matrices and .tsv files.
-After loading the data set, the function ```CreateSeuratObject()``` is used to create a Seurat object that contains the raw data. In this object several filters can be applied or altered, which is shown in the following sections.
+After loading the dataset, the function ```CreateSeuratObject()``` is used to create a Seurat object that contains the raw data. In this object several filters can be applied or altered, which is shown in the following sections.
 ```{r Load_data_set, include=FALSE}
-# Load the PBMC data set
+# Load the PBMC dataset
 pbmc.data <- Read10X(data.dir = here("seurat", "filtered_gene_bc_matrices", "hg19"))
 
 # Initialize the Seurat object with the raw (non-normalized data).
@@ -80,8 +80,8 @@ pbmc
 
 ```
 
-### Pre-processing of the data set
-To make sure the data that will be analyzed is reliable it is important that low quality cells are removed from the data set. In this case the quality doesn't refer to a Phred score (read quality), but to the amount of unique features per cell, the percentage of mitochondrial genes and the total number of molecules per cell;
+### Pre-processing of the dataset
+To make sure the data that will be analyzed is reliable it is important that low quality cells are removed from the dataset. In this case the quality doesn't refer to a Phred score (read quality), but to the amount of unique features per cell, the percentage of mitochondrial genes and the total number of molecules per cell;
 
  - The number of unique features per cell are relevant since too few features compared to the rest of the cells could mean that sequencing of this particular cell was insufficient or that the droplet did not contain a cell. If the number of features is higher it could mean that two or more cells were captured in the same droplet. In most cases a feature is a gene, but this doesn't always have to be the case, sometimes this might be regulatory RNA instead. 
  - The number of counts says something about the number of different molecules or Unique Molecular Identifiers (UMIs) in one cell. If this number is too low it could mean that this is a poor capture and if this number is too high it could mean that there might be more then one cell in a droplet.
@@ -91,7 +91,7 @@ The first step in pre-processing is adding a column to the dataframe with the pe
 In the first column the cell barcodes are shown, the second column contains the original identity of the sample the third, fourth and fifth column contain the number of the number of counts, unique genes and the percentage of mitochondrial genes. 
  
 ```{r Preprocessing_of_data_set, echo=FALSE}
-# Add a column with [[ to the Seurat object containing info about the percentage of mitochondrial genes, PercentageFeatureSet searches for genes that start with MT in the pbmc data set.
+# Add a column with [[ to the Seurat object containing info about the percentage of mitochondrial genes, PercentageFeatureSet searches for genes that start with MT in the pbmc dataset.
 pbmc[["percent_mt"]] <- PercentageFeatureSet(pbmc, pattern = "^MT-")
 
 # Show the first 5 lines of the meta data frame of Seurat object pbmc
@@ -112,7 +112,7 @@ In the violin plots in figure 1 each dot represents the datapoint for one single
 VlnPlot(pbmc, features = c("nFeature_RNA", "nCount_RNA", "percent_mt"), ncol = 3)
 ```
 
-With the function ```FeatureScatter()``` a scatterplot is generated of two QC metrics. The first argument should contain the Seurat object where the QC metrics are stored. Then the x-axis should be defined with the argument ```feature1 =```, in figure 2 this was defined as nCount_RNA. The y-axis can be defined in a similar way using ```feature2 =```, in the left plot in figure 2 this was defined as *percent_mt* and in the right plot this was defined as *nFeature_RNA*. The title of the plot is the correlation value, this could be changed by the argument plot.cor, which can be set to TRUE or FALSE. ```FeatureScatter()``` also has several arguments that could be used to modify the plots, for example if the data set contains cells with different identities these could be grouped in different colours with argument ```group.by```. 
+With the function ```FeatureScatter()``` a scatterplot is generated of two QC metrics. The first argument should contain the Seurat object where the QC metrics are stored. Then the x-axis should be defined with the argument ```feature1 =```, in figure 2 this was defined as nCount_RNA. The y-axis can be defined in a similar way using ```feature2 =```, in the left plot in figure 2 this was defined as *percent_mt* and in the right plot this was defined as *nFeature_RNA*. The title of the plot is the correlation value, this could be changed by the argument plot.cor, which can be set to TRUE or FALSE. ```FeatureScatter()``` also has several arguments that could be used to modify the plots, for example if the dataset contains cells with different identities these could be grouped in different colours with argument ```group.by```. 
 
 \newpage
 
@@ -179,7 +179,7 @@ plot1 + plot2
 ```
 
 \newpage
-## Normalizing the data set
+## Normalizing the dataset
 In order to correct for differences in sequencing depth between different cells, dropout events and other differences such as total RNA content per cell a normalization step is required. By normalizing the data, biological differences are detected in a more reliable fashion. There are several methods for normalizing the data, quite often a Log normalization is used and in Seurat this is also an option. The function that can be used to do this in Seurat is ```NormalizeData()```, this function comes with several arguments. For analyzing differential expression in RNA-seq data ```LogNormalize``` is the most suitable argument.
 
  - ```LogNormalize``` : With this argument feature counts per cell are divided by the total counts and multiplied by the ```scale.factor```, which is the value to which each cell's total UMI count will be normalized to. De default value for scale.factor is 10000 but can be changed if needed. This method could be used to normalize for sequencing depth and works for all the cells in the sample, this method is typically used since this way of normalizing makes all the cells comparable by scaling the total counts to the same value. 
@@ -209,7 +209,7 @@ top10 <- head(VariableFeatures(pbmc_features1), 10)
 
 # plot variable features without and with labels (with LabelPoints())
 plot1 <- VariableFeaturePlot(pbmc_features1)+
-  ggtitle("Features of pbmc data set") +
+  ggtitle("Features of pbmc dataset") +
   xlab("Average expression") +
   ylab("Standardized variance") +
   theme_classic()+
@@ -221,7 +221,7 @@ plot1 <- VariableFeaturePlot(pbmc_features1)+
     legend.position = "bottom"
   )
 plot2 <- LabelPoints(plot = plot1, points = top10, repel = TRUE, size = 3)+
-  ggtitle("Features of pbmc data set", subtitle = "top 10 most variable features are labeled") +
+  ggtitle("Features of pbmc dataset", subtitle = "top 10 most variable features are labeled") +
   xlab("Average expression") +
   ylab("Standardized variance") +
   theme_classic()+
@@ -234,7 +234,7 @@ plot2 <- LabelPoints(plot = plot1, points = top10, repel = TRUE, size = 3)+
   )
 
 plot3 <- VariableFeaturePlot(pbmc_features2)+
-  ggtitle("Features of pbmc data set") +
+  ggtitle("Features of pbmc dataset") +
   xlab("Average expression") +
   ylab("Standardized variance") +
   theme_classic()+
@@ -246,7 +246,7 @@ plot3 <- VariableFeaturePlot(pbmc_features2)+
     legend.position = "bottom"
   )
 plot4 <- LabelPoints(plot = plot3, points = top10, repel = TRUE, size = 3)+
-  ggtitle("Features of pbmc data set", subtitle = "top 10 most variable features are labeled") +
+  ggtitle("Features of pbmc dataset", subtitle = "top 10 most variable features are labeled") +
   xlab("Average expression") +
   ylab("Standardized variance") +
   theme_classic()+
@@ -261,7 +261,7 @@ plot1 + plot2 + plot3 + plot4
 ```
 
 ## Data scaling
-To prepare the data set for Principal Component Analysis (PCA), first scaling of the data needed. Data scaling is performed by centering each feature to have a mean of 0, then each gene variance is scaled to 1 and optionally some variables could be regressed out. If a feature is high in expression, variance is naturally higher. If a feature is low in expression, variance is naturally lower. By dividing each feature by its standard deviation it is ensured that each gene contributes to PCA without bias. Scaling the data in this way ensures that biological differences are detected in PCA instead of only features that have high expression patterns.
+To prepare the dataset for Principal Component Analysis (PCA), first scaling of the data needed. Data scaling is performed by centering each feature to have a mean of 0, then each gene variance is scaled to 1 and optionally some variables could be regressed out. If a feature is high in expression, variance is naturally higher. If a feature is low in expression, variance is naturally lower. By dividing each feature by its standard deviation it is ensured that each gene contributes to PCA without bias. Scaling the data in this way ensures that biological differences are detected in PCA instead of only features that have high expression patterns.
 
 In Seurat the function ```ScaleData()``` is used to scale the data, in this function several arguments could be used to decide which variables to filter.
 
@@ -274,7 +274,7 @@ pbmc_scaled2 <- ScaleData(pbmc_features2)
 
 \newpage
 ## Linear Dimension Reduction
-After scaling the data the output of ```ScaleData()``` could be used to perform Principal Component Analysis (PCA). PCA is a method that could be used for dimension reduction if you have a data set with a lot of different variables. In the context of gene expression analysis all the different features are considered variables, the amount of variables in such a data set are enormous. In order to analyse as much data as possible without looking at potentially irrelevant data PCA is performed. PCA does not filter the data directly, but instead it re-formats the same amount of data in a smaller number of components. For example PCA could reduce the amount of variables from thousands of features to 50 Principal Components (PCs). Then it ranks the PCs from largest source of variation (PC1) to smallest source of variation (PCx).
+After scaling the data the output of ```ScaleData()``` could be used to perform Principal Component Analysis (PCA). PCA is a method that could be used for dimension reduction if you have a dataset with a lot of different variables. In the context of gene expression analysis all the different features are considered variables, the amount of variables in such a dataset are enormous. In order to analyse as much data as possible without looking at potentially irrelevant data PCA is performed. PCA does not filter the data directly, but instead it re-formats the same amount of data in a smaller number of components. For example PCA could reduce the amount of variables from thousands of features to 50 Principal Components (PCs). Then it ranks the PCs from largest source of variation (PC1) to smallest source of variation (PCx).
 
 In Seurat PCA is performed with the function ```RunPCA()```, within this function "```npcs```" could be used to determine how many PCs should be computed.
 
@@ -332,6 +332,16 @@ DimHeatmap(pbmc_PCA2, dims = 1, cells = 500, balanced = TRUE)
 ```
 
 \newpage
+
+## Determine dimensionality of the dataset
+To see which PCs are really contributing to biological variance and which PCs are potential technical noise, the PCs are plotted in an elbowplot. In this plot can be created in Seurat with ```ElbowPlot()```. In this plot the standard deviation of each PC is plotted on the y-axis and the different PCs are ranked from largest to smallest variance on the x-axis. The plot indirectly shows variance  since *variance = stdev^2*. 
+
+```{r Elbowplot_PCA2w1, echo=FALSE, warning=FALSE, message=FALSE, fig.height=3, fig.cap="Elbow plot of principal components. This plot shows the standard deviation of each principal component and is used to determine how many PCs capture most of the variation in the data. This elbow plot is based on the object with nfeatures = 100."}
+# Create an elbowplot of the object with nfeatures = 200
+ElbowPlot(pbmc_PCA1)
+```
+
+
 ## Sources
 
  - 1 [Seurat Tutorial](https://satijalab.org/seurat/articles/pbmc3k_tutorial)

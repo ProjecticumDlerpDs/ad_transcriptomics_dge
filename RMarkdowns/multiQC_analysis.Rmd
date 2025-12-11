@@ -112,16 +112,34 @@ knitr::include_graphics("~/ad_transcriptomics_dge/analyses/fastqc/SRR10278813_pe
 \FloatBarrier
 
 ## Analysis with MultiQC
-The analyses of all the plots that were generated in [analysis with FastQC](#analysis-with-fastqc) is quite time consuming. To optimize this part of the workflow the package ```MultiQC``` was used. No script was written for MultiQC, after installing multiQC it is possible to run MultiQC from the command line. In order to run multiQC analysis it is important to first navigate to the directory where the fastQC reports are stored, since multiQC uses these reports as input. 
+The analysis of all the plots generated in [analysis with FastQC](#analysis-with-fastqc) is quite time-consuming. To simplify the process and enable the evaluation of all samples simultaneously, the package MultiQC was used. By using MultiQC it is no longer necessary to inspect each FastQC report individually, since the tool bundles all FastQC outputs into a single interactive report. No script was required for MultiQC; after installation it can be run directly from the command line. To perform a MultiQC analysis, it is important to first navigate to the directory containing the FastQC reports, as MultiQC uses these files as its input.
+
 ```{bash run multiQC from command line, eval = FALSE}
 cd path/to/fastqc_reports
 multiqc .
 ```
+After running MultiQC, a report is generated in the directory where the analysis was performed. This report contains the same plots that a FastQC report produces; however, a MultiQC report provides interactive plots in which all input samples are layered on top of one another, making it easier to compare data across runs and samples.
+Figure 3 shows the plot for per-base quality scores. Unlike the FastQC output, this version does not include boxplots; instead, each line represents a different accession number. In the HTML version of the MultiQC report, the plot is interactive—when hovering over a line, the corresponding accession number, read position, and mean Phred score are displayed.
 
-After running multiQC a report is generated in the directory where analysis was performed. This report contains all of the same plots that a fastQC report generates. However a multiQC report contains interactive plots were all of the input reports are layered on top of each other, which makes it easier to compare data of different runs and samples. 
-In Figure 3 an the plot for per base quality score is shown, compared to the fastQC report this one doesn't contain any box plots. Each line represents a different accession number. In the html version of the multiQC report this plot is interactive, if the mouse hovers over one of the lines, the corresponding accession number, position in read and mean phred score are shown.
 \FloatBarrier
 ```{r include_multiqc_plot1, echo=FALSE, out.width="80%", fig.cap="Per base quality score. This figure shows the per base quality score of all of the data from GSE138852. This plot was generated with the  multiQC package."}
 knitr::include_graphics("~/ad_transcriptomics_dge/analyses/fastqc/fastqc_per_base_sequence_quality_plot.png")
 ```
 \FloatBarrier
+
+## Conclusion
+Based on the FastQC and MultiQC analyses, it can be concluded that the overall sequencing quality of all of the different samples is high and suitable for further processing (Q>30). For all the samples the average Phred scores remain well above acceptable thresholds, at the end of the reads a slight incline is observed, however this is expected when sequencing with Illumina. 
+
+When looking at the Per Sequence Quality Scores, it can be observed that the curve for the average Q-score of individual reads shows a peak in the green section of the plot (Q>30). This indicates that the majority of the reads are of very good quality and that the dataset appears to be reliable based on this information.
+
+
+
+
+
+
+
+
+
+
+
+
