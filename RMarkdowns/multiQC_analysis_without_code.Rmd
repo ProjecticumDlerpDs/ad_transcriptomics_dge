@@ -32,6 +32,8 @@ knitr::opts_chunk$set(echo = TRUE)
  - [Obtaining the data](#obtaining-the-data)
  - [Analysis with FastQC](#analysis-with-fastqc)
  - [Analysis with multiQC](#analysis-with-multiqc)
+ - [Conclusion](Conclusion)
+ - [Discussion](Discussion)
 
 ## Introduction
 In this RMarkdown the FastQC and multiQC analysis of the .fastq-files from [GSE138852](https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSE138852&format=file&file=GSE138852%5Fcounts%2Ecsv%2Egz) is described. These .fastq-files contain the raw sequencing data and the phred-scores generated on the Illumina NextSeq 500 high-output lane with the 10x Genomics Chromium Single Cell 3′ Library & Gel Bead Kit v2. This markdown explains how analysis should be done and what the conclusion and discussion is in regards to the research question.
@@ -128,14 +130,18 @@ knitr::include_graphics("~/ad_transcriptomics_dge/analyses/fastqc/fastqc_per_bas
 \FloatBarrier
 
 ## Conclusion
-Based on the FastQC and MultiQC analyses, it can be concluded that the overall sequencing quality of all of the different samples is high and suitable for further processing (Q>30). For all the samples the average Phred scores remain well above acceptable thresholds, at the end of the reads a slight incline is observed, however this is expected when sequencing with Illumina. 
+For all the samples the average Phred scores remain above acceptable thresholds (Q>30), at the end of the reads a slight incline is observed, however this is expected when sequencing with Illumina. Based on the average Phred scores it can be concluded that basecalling is performd with high accuracy. 
 
 When looking at the Per Sequence Quality Scores, it can be observed that the curve for the average Q-score of individual reads shows a peak in the green section of the plot (Q>30). This indicates that the majority of the reads are of very good quality and that the dataset appears to be reliable based on this information.
 
+The plot for GC content shows a peak as expected around 41% since human DNA has a GC content about 41% [1](https://www.chg.ox.ac.uk/~gav/projects/oxford_statgen_summer_school/website/next_generation_sequencing/basic_sequence_data_analysis/Quality_control/#:~:text=Per%2Dsequence%20GC%20content%E2%80%8B,and%20over%2Drepresented%20sequences%E2%80%8B). There is a small shoulder in the peak at around 80%. 
 
+The overal conclusion is that the data can be used for further processing, the quality of sequencing runs looks good with an average Q-score of >30. The GC-content is as is expected for the organism and the drop in quality at the end of the reads is a known pattern for illumina.
 
+## Discussion
+In general all the average Phred-scores of the different samples are of high quality, however at the end of each read the quality starts to go down. In order to only use reads with Q>30, the end of the reads could be trimmed. Another option is to completely filter out everything with Q<30. Since the profile of the plot is typical for Illumina, the choice was made to keep the data as is for now. Also filtering out data could potentially reduce the resolution of the dataset.
 
-
+The plot for GC-content showed a small shoulder at 80%, this could be a small contamination but since the shoulder shows at the same point in all the samples this seems unlikely. It might also be that there are some GC-rich genomic regions or repetitive elements present [2](chrome-extension://efaidnbmnnnibpcajpcglclefindmkaj/http://130.239.72.131:3000/materials/materials/Guidelines-for-RNA-Seq-data-analysis.pdf).
 
 
 
