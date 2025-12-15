@@ -36,6 +36,12 @@ knitr::opts_chunk$set(echo = TRUE)
 - [Loading the data](#loading-the-dataset-and-creating-a-seurat-object)
 - [Pre-processing of the dataset](#pre-processing-of-the-dataset)
 - [Normalizing the dataset](#normalizing-the-dataset)
+- [Identification of highly variable features](#identification-of-highly-variable-features)
+- [Linear dimension reduction](#linear-dimension-reduction)
+- [Determine dimensionality of the dataset](#determine-dimensionality-of-the-dataset)
+- [Clustering the cells](#clustering-the-cells)
+- [Run non-linear dimensional reduction](#run-non-linear-dimensional-reduction)
+- [Finding differentially expressed features](#finding-differentially-expressed-features)
 
 
 ## Introduction
@@ -104,8 +110,6 @@ The dataframe can also be visualised in a plot, in figure 1 a violin plot is sho
  - __nCount_RNA__: this plot shows the total amount of RNA molecules detected
  - __percent_mt__: this plot shows the percentage of mitochondrial genes
 In the violin plots in figure 1 each dot represents the datapoint for one single cell, on the x-axis the identity is shown, on the y-axis the amount is shown of the metric that is plotted.
-
-\newpage 
 
 ```{r Visualize_dataframe, echo=FALSE, warning=FALSE, fig.cap="Violin plot of QC-metrics, in the first plot the unique number of genes per cell are visualised, in the second plot the amount of RNA molecules is shown and in the last plot the percentage of mitochondrial genes is shown", fig.pos='!htbp'}
 # Visualize dataframe as a violin plot
@@ -336,10 +340,51 @@ DimHeatmap(pbmc_PCA2, dims = 1, cells = 500, balanced = TRUE)
 ## Determine dimensionality of the dataset
 To see which PCs are really contributing to biological variance and which PCs are potential technical noise, the PCs are plotted in an elbowplot. In this plot can be created in Seurat with ```ElbowPlot()```. In this plot the standard deviation of each PC is plotted on the y-axis and the different PCs are ranked from largest to smallest variance on the x-axis. The plot indirectly shows variance  since *variance = stdev^2*. 
 
-```{r Elbowplot_PCA2w1, echo=FALSE, warning=FALSE, message=FALSE, fig.height=3, fig.cap="Elbow plot of principal components. This plot shows the standard deviation of each principal component and is used to determine how many PCs capture most of the variation in the data. This elbow plot is based on the object with nfeatures = 100."}
+There are several ways to choose which PCs to use in downstream analysis, the easiest way is to see where in the plot the elbow is located (this is where the drop in SD per PC becomes small) and take the PCs before the elbow for downstream analysis. 
+
+```{r Elbowplot_PCA1, echo=FALSE, warning=FALSE, message=FALSE, fig.height=3, fig.cap="Elbow plot of principal components. This plot shows the standard deviation of each principal component and is used to determine how many PCs capture most of the variation in the data. This elbow plot is based on the object with nfeatures = 200."}
 # Create an elbowplot of the object with nfeatures = 200
 ElbowPlot(pbmc_PCA1)
 ```
+
+```{r Elbowplot_PCA2, echo=FALSE, warning=FALSE, message=FALSE, fig.height=3, fig.cap="Elbow plot of principal components. This plot shows the standard deviation of each principal component and is used to determine how many PCs capture most of the variation in the data. This elbow plot is based on the object with nfeatures = 10000."}
+# Create an elbowplot of the object with nfeatures = 10000
+ElbowPlot(pbmc_PCA2)
+```
+
+## Clustering the cells 
+In order to make the data interpretable it is possible to cluster the cells in Seurat based on similar expression patterns. It is important to understand that clustering is not performed on the annotated genes and raw counts but on de dimensionality reduced data (PCA-output). By clustering the data and plotting them distinct cell types and distinct cell states are revealed. 
+
+ - ```FindNeighbors()``` is used to find a given amount of nearest neighbors for a dataset, the amount of neighbors that should be computed can be defined by using the argument ```k.param```. ```FindNeighbors()``` computes the distance between cells based on PCA, then the value for ```k.param``` affects how clusters are defined; a small value for ```k.param``` creates small clusters and might introduce more noise, a larger value for ```k.param``` creates bigger clusters in which smaller differences might get merged (the default setting in Seurat for k.param is 20). Within ```FindNeighbors()``` the function ```compute.SNN``` (Shared Nearest Neighbor similarity) looks how similar cells are based on how many neighbors they share. The output of ```FindNeighbors()``` is stored in a graph and used as input for ```FindClusters()```.
+ - ```FindClusters()``` identifies clusters of cells, basically the output of ```FindNeigbors()``` is used and cells are divided into clusters of cells that are more similar to each other then others. If the distance between two clusters of cells is bigger it means these cells have a more different expression pattern than two cells in clusters that are closer together. The identification of clusters is done with an algorithm that uses SNN data to define different communities of cells. The argument "```resolution```" is quite important for ```FindClusters()```, since it determines how specific the clusters will become. A lower resolution generates larger less detailed clusters, a higher resolution generates clusters that are more specific. In general the resolution should be chosen in such a way that biologically distinct cell populations are separated, while avoiding overclustering.
+
+```{r Cluster_cells, include=FALSE}
+# Find Nearest Neighbors for dataset, default setting was used for k.param. 7 PCs were used for nfeatures=200, 9PCs were used for nfeatures=10000 
+pbmc1 <- FindNeighbors(pbmc_PCA1, dims = 1:7)
+pbmc2 <- FindNeighbors(pbmc_PCA2, dims = 1:9)
+
+# Identification of clusters, resolution was set at 0.5. 
+pbmc1 <- FindClusters(pbmc1, resolution = 0.5)
+pbmc2 <- FindClusters(pbmc2, resolution = 0.5)
+```
+
+## Run non-linear dimensional reduction
+Seurat has several tools that can be used to visualise a dataset with several dimensions as a two dimensional map. Cells that are more similar are closer together, cells that are more distinct are further removed from each other. 
+With RunUMAP() an UMAP is generated of the cells that are neighbors in PCA. These cells are visualised for the PCs that are chosen as input. The x and y-axis in an UMAP do not have a meaning. A UMAP is only for visualisation. 
+
+```{r Plot_UMAP1, echo=FALSE, warning=FALSE, message=FALSE, fig.cap= "UMAP of object with nfeatures=200. Cells are visualised in two-dimensional UMAP space based on the first 7 PCs. Each point represents a single cell and colours indicate clusters identified using FindClusters (resolution = 0.5)."}
+pbmc1 <- RunUMAP(pbmc1, dims = 1:7)
+
+DimPlot(pbmc1, reduction = "umap")
+```
+
+```{r Plot_UMAP2, echo=FALSE, warning=FALSE, message=FALSE, fig.cap= "UMAP of object with nfeatures=10000. Cells are visualised in two-dimensional UMAP space based on the first 9 PCs. Each point represents a single cell and colours indicate clusters identified using FindClusters (resolution = 0.5)."}
+pbmc2 <- RunUMAP(pbmc2, dims = 1:9)
+
+DimPlot(pbmc2, reduction = "umap")
+```
+
+## Finding differentially expressed features
 
 
 ## Sources
@@ -350,4 +395,6 @@ ElbowPlot(pbmc_PCA1)
  - 4 [Seurat FindVariableFeatures](https://satijalab.org/seurat/reference/findvariablefeatures)
  - 5 [Comprehensive Integration of Single-Cell Data, Tim Stuart et al.](https://www.cell.com/cell/fulltext/S0092-8674(19)30559-8?_returnURL=https%3A%2F%2Flinkinghub.elsevier.com%2Fretrieve%2Fpii%2FS0092867419305598%3Fshowall%3Dtrue)
  - 6 [Seurat ScaleData](https://satijalab.org/seurat/reference/scaledata)
+ - 7 [Seurat FindNeighbors](https://satijalab.org/seurat/reference/findneighbors#examples)
+ - 8 [Seurat FindClusters](https://satijalab.org/seurat/reference/findclusters)
 
