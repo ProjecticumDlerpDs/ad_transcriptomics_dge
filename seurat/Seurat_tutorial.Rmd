@@ -385,6 +385,37 @@ DimPlot(pbmc2, reduction = "umap")
 ```
 
 ## Finding differentially expressed features
+Once cells are clustered with find clusters the next step is to see which features are expressed relatively high or low compared to others. These features are referred to as marker genes and can be identified in Seurat with ```FindMarkers()```. ```FindMarkers()``` performs differential expression (DE) testing on two groups. The groups can be indicated with the argument ```ident.1``` and ```ident.2```, if ```ident.2``` is not specified Seurat compares ```ident.1``` with all other clusters.
+
+```{r example_DE_features, echo=FALSE, message=FALSE, warning=FALSE}
+# Find all markers of cluster 1 compared to the rest of the cell population
+cluster1.markers <- FindMarkers(pbmc1, ident.1 = 1)
+head(cluster1.markers, n = 5)
+```
+```{r example_DE_features2, echo=FALSE, message=FALSE, warning=FALSE}
+# Find all markers of cluster 2 compared to the rest of the cell population
+cluster2.markers <- FindMarkers(pbmc1, ident.1 = 2)
+head(cluster2.markers, n = 5)
+```
+In the chunk the output of the function FindMarkers() is shown. The different columns contain the following values: 
+
+ * __p_val__: This is the statistical significance, with lower p-values it is more unlikely that a difference is due to chance.
+ * __avg_log2FC__: This is the log fold-chage of the average expression between the two groups. With higher positive values a gene is expressed more in the ```ident.1``` group compared to ```ident.2```.
+ * __pct.1__: This is the percentage of cells in the first group where the gene is detected
+ * __pct.2__: This is the percentage of cells in the second group where the gene is detected.
+ * __p_val_adj__: This is the adjusted P-value, P-value adjustment is done using bonferroni correction and corrected by dividing the significance level by the total number of genes. 
+ 
+It is also possible to compare every cluster against all other cells to find markers across the entire dataset, this is done with ```FindAllMarkers()```. 
+
+After finding the different markers the data can be plotted in several ways. In 
+
+```{r vlnplot_markers, echo=FALSE, warning=FALSE, message=FALSE, fig.height=3, fig.cap= "Violin plot of gene expression across clusters. This Violinplot is shows the distribution of expression levels of genes NKG7 and S100A8 for cells in different clusters"}
+VlnPlot(pbmc1, features = c("NKG7", "S100A8"))
+```
+
+```{r featureplot_markers, }
+FeaturePlot(pbmc1, features = c("NKG7", "CST7", "S100A8", "LGALS2"))
+```
 
 
 ## Sources
@@ -397,4 +428,6 @@ DimPlot(pbmc2, reduction = "umap")
  - 6 [Seurat ScaleData](https://satijalab.org/seurat/reference/scaledata)
  - 7 [Seurat FindNeighbors](https://satijalab.org/seurat/reference/findneighbors#examples)
  - 8 [Seurat FindClusters](https://satijalab.org/seurat/reference/findclusters)
+ - 9 [Seurat FindMarkers](https://satijalab.org/seurat/reference/findmarkers)
+ - 10 [Etymologia: Bonferroni correction](https://pmc.ncbi.nlm.nih.gov/articles/PMC4313667/)
 

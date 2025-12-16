@@ -1,0 +1,65 @@
+---
+title: "02 Identification of different celltypes in Seurat"
+author: "Meryem Stroosma"
+date: "`r Sys.Date()`"
+output: 
+  pdf_document:
+    latex_engine: xelatex
+    fig_caption: true
+
+# Use colours for hyperlinks
+colorlinks: true
+linkcolor: purple
+urlcolor: purple
+citecolor: purple
+
+header-includes:
+  - \usepackage{fontspec}
+  - \usepackage{fancyvrb}
+  - \usepackage[section]{placeins}
+  - \usepackage{float} 
+  - \usepackage{blindtext}
+  - \setmainfont{DejaVu Sans Condensed}
+  - \setsansfont{DejaVu Sans}
+  - \setmonofont{DejaVu Sans Mono}
+  - \DefineVerbatimEnvironment{Highlighting}{Verbatim}{fontsize=\footnotesize,commandchars=\\\{\}}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r Load_packages, echo=FALSE, include=FALSE}
+# Load the required packages
+library(dplyr)
+library(Seurat)
+library(patchwork)
+library(here)
+library(ggplot2)
+```
+
+## Introduction
+In this RMarkdown the FastQC and multiQC analysis of the .fastq-files from [GSE138852](https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSE138852&format=file&file=GSE138852%5Fcounts%2Ecsv%2Egz) is described. These .fastq-files contain the raw sequencing data and the phred-scores generated on the Illumina NextSeq 500 high-output lane with the 10x Genomics Chromium Single Cell 3′ Library & Gel Bead Kit v2. This markdown explains how identification of different cell types is be done and what the conclusion and discussion is in regards to the research question.
+
+## Research question
+For this project the main research question is _"How can a reliable and reproducible analysis pipeline be established to identify cell-type-specific differential gene expression from snRNA-seq data in Alzheimer’s disease?"_, the second step XXXXX
+
+## Packages and Requirements
+In order to run the scripts for analysis in Seurat a few packages need to be installed first, for analysis an environment was created in miniconda with the command line prompt;
+XXXXXXXX
+
+
+### Loading the dataset and creating a Seurat object
+In order to perform analysis with Seurat, the data first needs to be loaded. This is done with ```Read10X()``` which is a Seurat function that can be used to load 10X genomics files such as matrices and .tsv files.
+After loading the dataset, the function ```CreateSeuratObject()``` is used to create a Seurat object that contains the raw data. In this object several filters can be applied or altered, which is shown in the following sections.
+```{r Load_data_set, include=FALSE}
+# Load the GSE138852 countmatrix
+count_matrix <- read.csv(file = here("raw_data", "GSE138852_counts.csv"),
+  row.names = 1,
+  check.names = FALSE
+  )
+
+# Initialize the Seurat object with the pre-filtered count matrix
+count_matrix <- CreateSeuratObject(counts = count_matrix, project = "GSE138852")
+```
+
