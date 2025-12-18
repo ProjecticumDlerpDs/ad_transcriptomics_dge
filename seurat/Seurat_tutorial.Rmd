@@ -42,6 +42,7 @@ knitr::opts_chunk$set(echo = TRUE)
 - [Clustering the cells](#clustering-the-cells)
 - [Run non-linear dimensional reduction](#run-non-linear-dimensional-reduction)
 - [Finding differentially expressed features](#finding-differentially-expressed-features)
+- [Sources](#sources)
 
 
 ## Introduction
@@ -186,7 +187,7 @@ plot1 + plot2
 ## Normalizing the dataset
 In order to correct for differences in sequencing depth between different cells, dropout events and other differences such as total RNA content per cell a normalization step is required. By normalizing the data, biological differences are detected in a more reliable fashion. There are several methods for normalizing the data, quite often a Log normalization is used and in Seurat this is also an option. The function that can be used to do this in Seurat is ```NormalizeData()```, this function comes with several arguments. For analyzing differential expression in RNA-seq data ```LogNormalize``` is the most suitable argument.
 
- - ```LogNormalize``` : With this argument feature counts per cell are divided by the total counts and multiplied by the ```scale.factor```, which is the value to which each cell's total UMI count will be normalized to. De default value for scale.factor is 10000 but can be changed if needed. This method could be used to normalize for sequencing depth and works for all the cells in the sample, this method is typically used since this way of normalizing makes all the cells comparable by scaling the total counts to the same value. 
+ - ```LogNormalize``` : With this argument feature counts per cell are divided by the total counts and multiplied by the ```scale.factor```, which is the value to which each cell's total UMI count will be normalized to. De default value for scale.factor is 10000 but can be changed if needed. This method could be used to normalize for sequencing depth and works for all the cells in the sample, this method is typically used since this way of normalizing makes all the cells comparable by scaling the total counts to the same value _(2)(3)_. 
 
 ```{r Normalize_data, include=FALSE, warning=FALSE}
 # To normalize the data a new object is created in which the data is normalized by using NormalizeData with argument LogNormalize. In theory this could also be done with the shortened command: pbmc_normalized <- NormalizeData(pbmc_filtered) 
@@ -198,7 +199,7 @@ When analyzing gene expression in general there are thousands of different featu
 
  - ```vst```: Vst is short for Variance Stabilizing Transformation. This is the default setting of FindVariableFeatures. Vst looks at the expression level and then finds features whose variance is higher than expected in relation to the mean expression of that feature. This is useful since the relative variance is usually higher for genes that have a lower expression pattern, while this is usually lower for genes that have a higher expression pattern. Vst works in several steps, first it takes the _log(variance)_ and _log(mean)_ and fits a curve using logical polynomial regression (LOESS). This curve makes an estimation of the expected variance given the mean expression of a feature. Then it calculates standardized variance for each feature by _standardized variance (observed variance - expected variance) / expected variance_. Eventually it decides based on the largest values for standardized variance wich features are highle variable.
  - ```mean.var.plot``` : Mean variance plot or MVP is an older method compared to vst. It works by calculating average expression and dispersion. Then it divides features into bins by looking at the average expression and it calculates a Z-score for dispersion _dispersion = variance / mean_ per bin. The number of bins can be adjusted. This is based on the idea that genes with the same mean expression should have a similar technical variance, when the expression of a gene is different from the mean expression it should be detected with MVP.  
- - ```dispersion``` : Dispersion is the simplest method in Seurat to identify variable features. Dispersion is the _variance_ divided by the _mean_, this method just looks at the highest dispersion without adjusting for mean expression. Dispersion is therefore the least accurate method since the mean expression could strongly influence the dispersion value.
+ - ```dispersion``` : Dispersion is the simplest method in Seurat to identify variable features. Dispersion is the _variance_ divided by the _mean_, this method just looks at the highest dispersion without adjusting for mean expression. Dispersion is therefore the least accurate method since the mean expression could strongly influence the dispersion value _(4)(5)_.
  
 The default method in ```FindVariableFeatures``` is ```vst```, which is also the method that will be used in the next steps.
 
@@ -267,7 +268,7 @@ plot1 + plot2 + plot3 + plot4
 ## Data scaling
 To prepare the dataset for Principal Component Analysis (PCA), first scaling of the data needed. Data scaling is performed by centering each feature to have a mean of 0, then each gene variance is scaled to 1 and optionally some variables could be regressed out. If a feature is high in expression, variance is naturally higher. If a feature is low in expression, variance is naturally lower. By dividing each feature by its standard deviation it is ensured that each gene contributes to PCA without bias. Scaling the data in this way ensures that biological differences are detected in PCA instead of only features that have high expression patterns.
 
-In Seurat the function ```ScaleData()``` is used to scale the data, in this function several arguments could be used to decide which variables to filter.
+In Seurat the function ```ScaleData()``` is used to scale the data, in this function several arguments could be used to decide which variables to filter _(6)_.
 
 ```{r Scaling_data, echo=FALSE, warning=FALSE, message=FALSE}
 # Scale the data of the object with nfeatures = 200
@@ -276,7 +277,6 @@ pbmc_scaled1 <- ScaleData(pbmc_features1)
 pbmc_scaled2 <- ScaleData(pbmc_features2)
 ```
 
-\newpage
 ## Linear Dimension Reduction
 After scaling the data the output of ```ScaleData()``` could be used to perform Principal Component Analysis (PCA). PCA is a method that could be used for dimension reduction if you have a dataset with a lot of different variables. In the context of gene expression analysis all the different features are considered variables, the amount of variables in such a dataset are enormous. In order to analyse as much data as possible without looking at potentially irrelevant data PCA is performed. PCA does not filter the data directly, but instead it re-formats the same amount of data in a smaller number of components. For example PCA could reduce the amount of variables from thousands of features to 50 Principal Components (PCs). Then it ranks the PCs from largest source of variation (PC1) to smallest source of variation (PCx).
 
@@ -294,7 +294,6 @@ An example of the data stored in the object created by ```RunPCA``` is shown bel
 ```{r Print_PCA, echo=FALSE, warning=FALSE, message=FALSE, fig.width=6, fig.height=4}
 # Examine and visualize PCA results a few different ways
 print(pbmc_PCA1[["pca"]], dims = 1:5, nfeatures = 5)
-print(pbmc_PCA2[["pca"]], dims = 1:5, nfeatures = 5)
 ```
 
 To visualize the PCA Seurat provides several ways to plot the data:
@@ -335,8 +334,6 @@ DimHeatmap(pbmc_PCA1, dims = 1, cells = 500, balanced = TRUE)
 DimHeatmap(pbmc_PCA2, dims = 1, cells = 500, balanced = TRUE)
 ```
 
-\newpage
-
 ## Determine dimensionality of the dataset
 To see which PCs are really contributing to biological variance and which PCs are potential technical noise, the PCs are plotted in an elbowplot. In this plot can be created in Seurat with ```ElbowPlot()```. In this plot the standard deviation of each PC is plotted on the y-axis and the different PCs are ranked from largest to smallest variance on the x-axis. The plot indirectly shows variance  since *variance = stdev^2*. 
 
@@ -356,7 +353,7 @@ ElbowPlot(pbmc_PCA2)
 In order to make the data interpretable it is possible to cluster the cells in Seurat based on similar expression patterns. It is important to understand that clustering is not performed on the annotated genes and raw counts but on de dimensionality reduced data (PCA-output). By clustering the data and plotting them distinct cell types and distinct cell states are revealed. 
 
  - ```FindNeighbors()``` is used to find a given amount of nearest neighbors for a dataset, the amount of neighbors that should be computed can be defined by using the argument ```k.param```. ```FindNeighbors()``` computes the distance between cells based on PCA, then the value for ```k.param``` affects how clusters are defined; a small value for ```k.param``` creates small clusters and might introduce more noise, a larger value for ```k.param``` creates bigger clusters in which smaller differences might get merged (the default setting in Seurat for k.param is 20). Within ```FindNeighbors()``` the function ```compute.SNN``` (Shared Nearest Neighbor similarity) looks how similar cells are based on how many neighbors they share. The output of ```FindNeighbors()``` is stored in a graph and used as input for ```FindClusters()```.
- - ```FindClusters()``` identifies clusters of cells, basically the output of ```FindNeigbors()``` is used and cells are divided into clusters of cells that are more similar to each other then others. If the distance between two clusters of cells is bigger it means these cells have a more different expression pattern than two cells in clusters that are closer together. The identification of clusters is done with an algorithm that uses SNN data to define different communities of cells. The argument "```resolution```" is quite important for ```FindClusters()```, since it determines how specific the clusters will become. A lower resolution generates larger less detailed clusters, a higher resolution generates clusters that are more specific. In general the resolution should be chosen in such a way that biologically distinct cell populations are separated, while avoiding overclustering.
+ - ```FindClusters()``` identifies clusters of cells, basically the output of ```FindNeigbors()``` is used and cells are divided into clusters of cells that are more similar to each other then others. If the distance between two clusters of cells is bigger it means these cells have a more different expression pattern than two cells in clusters that are closer together. The identification of clusters is done with an algorithm that uses SNN data to define different communities of cells. The argument "```resolution```" is quite important for ```FindClusters()```, since it determines how specific the clusters will become. A lower resolution generates larger less detailed clusters, a higher resolution generates clusters that are more specific. In general the resolution should be chosen in such a way that biologically distinct cell populations are separated, while avoiding overclustering _(7)_.
 
 ```{r Cluster_cells, include=FALSE}
 # Find Nearest Neighbors for dataset, default setting was used for k.param. 7 PCs were used for nfeatures=200, 9PCs were used for nfeatures=10000 
@@ -370,7 +367,7 @@ pbmc2 <- FindClusters(pbmc2, resolution = 0.5)
 
 ## Run non-linear dimensional reduction
 Seurat has several tools that can be used to visualise a dataset with several dimensions as a two dimensional map. Cells that are more similar are closer together, cells that are more distinct are further removed from each other. 
-With RunUMAP() an UMAP is generated of the cells that are neighbors in PCA. These cells are visualised for the PCs that are chosen as input. The x and y-axis in an UMAP do not have a meaning. A UMAP is only for visualisation. 
+With RunUMAP() an UMAP is generated of the cells that are neighbors in PCA. These cells are visualised for the PCs that are chosen as input _(8)_. The x and y-axis in an UMAP do not have a meaning. A UMAP is only for visualisation.
 
 ```{r Plot_UMAP1, echo=FALSE, warning=FALSE, message=FALSE, fig.cap= "UMAP of object with nfeatures=200. Cells are visualised in two-dimensional UMAP space based on the first 7 PCs. Each point represents a single cell and colours indicate clusters identified using FindClusters (resolution = 0.5)."}
 pbmc1 <- RunUMAP(pbmc1, dims = 1:7)
@@ -385,7 +382,7 @@ DimPlot(pbmc2, reduction = "umap")
 ```
 
 ## Finding differentially expressed features
-Once cells are clustered with find clusters the next step is to see which features are expressed relatively high or low compared to others. These features are referred to as marker genes and can be identified in Seurat with ```FindMarkers()```. ```FindMarkers()``` performs differential expression (DE) testing on two groups. The groups can be indicated with the argument ```ident.1``` and ```ident.2```, if ```ident.2``` is not specified Seurat compares ```ident.1``` with all other clusters.
+Once cells are clustered with find clusters the next step is to see which features are expressed relatively high or low compared to others. These features are referred to as marker genes and can be identified in Seurat with ```FindMarkers()```. ```FindMarkers()``` performs differential expression (DE) testing on two groups. The groups can be indicated with the argument ```ident.1``` and ```ident.2```, if ```ident.2``` is not specified Seurat compares ```ident.1``` with all other clusters _(9)_.
 
 ```{r example_DE_features, echo=FALSE, message=FALSE, warning=FALSE}
 # Find all markers of cluster 1 compared to the rest of the cell population
@@ -403,11 +400,16 @@ In the chunk the output of the function FindMarkers() is shown. The different co
  * __avg_log2FC__: This is the log fold-chage of the average expression between the two groups. With higher positive values a gene is expressed more in the ```ident.1``` group compared to ```ident.2```.
  * __pct.1__: This is the percentage of cells in the first group where the gene is detected
  * __pct.2__: This is the percentage of cells in the second group where the gene is detected.
- * __p_val_adj__: This is the adjusted P-value, P-value adjustment is done using bonferroni correction and corrected by dividing the significance level by the total number of genes. 
- 
-It is also possible to compare every cluster against all other cells to find markers across the entire dataset, this is done with ```FindAllMarkers()```. 
+ * __p_val_adj__: This is the adjusted P-value, P-value adjustment is done using bonferroni correction and corrected by dividing the significance level by the total number of genes _(10)_. 
+ It is also possible to compare every cluster against all other cells to find markers across the entire dataset, this is done with ```FindAllMarkers()```. 
 
-After finding the different markers the data can be plotted in several ways. In 
+After identifying differentially expressed markers, the results can be visualized in several ways. In Figure 16, a violin plot is shown for the marker genes NKG7 and S100A8. The x-axis represents the cell identities, which in this case correspond to the clusters identified earlier in the analysis, while the y-axis shows the normalized expression levels of the genes.
+
+Based on Figure 16, NKG7 shows the highest expression in clusters 4 and 5. This observation is consistent with the UMAP in Figure 15, where clusters 4 and 5 are positioned close together, suggesting similar transcriptional profiles. S100A8 displays high expression in clusters 1 and 6. However, despite sharing the expression of this marker, clusters 1 and 6 are spatially separated in the UMAP plot, suggesting that they differ in their overall gene expression and may represent distinct cell states or populations that share a few markers.
+
+Another option for visualization is a UMAP feature plot, which displays the expression of specific marker genes across the UMAP embedding. This is shown in Figure 17. In this figure, the expression levels of NKG7, CST7, S100A8, and LGALS2 are visualized on the same UMAP embedding as shown in Figure 14. The color intensity indicates the expression level of the corresponding gene, with darker colors representing higher expression.
+
+The selected markers originate from different clusters, allowing comparison of gene expression patterns across cell populations. As expected, higher expression levels (darker colors) are observed in the clusters where these marker genes are characteristic, demonstrating that the UMAP structure corresponds well with the identified cluster-specific expression patterns.
 
 ```{r vlnplot_markers, echo=FALSE, warning=FALSE, message=FALSE, fig.height=3, fig.cap= "Violin plot of gene expression across clusters. This Violinplot is shows the distribution of expression levels of genes NKG7 and S100A8 for cells in different clusters"}
 VlnPlot(pbmc1, features = c("NKG7", "S100A8"))
@@ -416,7 +418,7 @@ VlnPlot(pbmc1, features = c("NKG7", "S100A8"))
 ```{r featureplot_markers, }
 FeaturePlot(pbmc1, features = c("NKG7", "CST7", "S100A8", "LGALS2"))
 ```
-
+\newpage
 
 ## Sources
 
