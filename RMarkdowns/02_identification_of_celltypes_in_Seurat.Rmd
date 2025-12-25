@@ -42,18 +42,30 @@ library(ggplot2)
 In this RMarkdown the FastQC and multiQC analysis of the .fastq-files from [GSE138852](https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSE138852&format=file&file=GSE138852%5Fcounts%2Ecsv%2Egz) is described. These .fastq-files contain the raw sequencing data and the phred-scores generated on the Illumina NextSeq 500 high-output lane with the 10x Genomics Chromium Single Cell 3′ Library & Gel Bead Kit v2. This markdown explains how identification of different cell types is be done and what the conclusion and discussion is in regards to the research question.
 
 ## Research question
-For this project the main research question is _"How can a reliable and reproducible analysis pipeline be established to identify cell-type-specific differential gene expression from snRNA-seq data in Alzheimer’s disease?"_, the second step XXXXX
+For this project the main research question is _"How can a reliable and reproducible analysis pipeline be set up to identify cell type-specific differential gene expression in Alzheimer's disease using a filtered expression matrix generated from snRNA-seq data?"_. Initially the research question was aimed at creating the entire pipeline with raw sequencing data as a starting point however, the publicly available data was lacking information on cellbarcodes and UMIs. Therefore the expression matrix published for GSE138852 was used as a starting point.
+
+The sub-question(s) that is answered in this RMarkdown is as followed;
+
+ - Can the most variable features be identified with the filtered expression count matrix as input? 
+ - How should the count matrix be used, should the groups be separated (healthy vs. Alzheimers disease)? 
 
 ## Packages and Requirements
 In order to run the scripts for analysis in Seurat a few packages need to be installed first, for analysis an environment was created in miniconda with the command line prompt;
 XXXXXXXX
 
+## About the count matrix
+The count matrix was downloaded from the GEO-database. The count matrix is a table which stores the gene expression measurements of all measured nuclei. Usually the matrix contains the raw expression measurements but in the case of GSE138852 some filters were already applied, the matrix contains;
 
+ - 13214 nuclei (before filtering 14876 nuclei were measured)
+ - Only nuclei with less then 10% of the total features being mitochondrial
+ - None of the features that are related to postmortem interval
+ - Only cells that are within the 5th - 95th percentile regarding gene and UMI count. 
+ 
 ### Loading the dataset and creating a Seurat object
-In order to perform analysis with Seurat, the data first needs to be loaded. This is done with ```Read10X()``` which is a Seurat function that can be used to load 10X genomics files such as matrices and .tsv files.
-After loading the dataset, the function ```CreateSeuratObject()``` is used to create a Seurat object that contains the raw data. In this object several filters can be applied or altered, which is shown in the following sections.
+The count matrix was stored in a comma separated values file (.csv-file). To be able to use this file for creating a Seurat object ```read.csv()``` was used to create a data.frame first. Then the data.frame was used as input for the function ```CreateSeuratObject()```. 
+
 ```{r Load_data_set, include=FALSE}
-# Load the GSE138852 countmatrix
+# Load the GSE138852 countmatrix as a data.frame
 count_matrix <- read.csv(file = here("raw_data", "GSE138852_counts.csv"),
   row.names = 1,
   check.names = FALSE
@@ -63,3 +75,20 @@ count_matrix <- read.csv(file = here("raw_data", "GSE138852_counts.csv"),
 count_matrix <- CreateSeuratObject(counts = count_matrix, project = "GSE138852")
 ```
 
+```{r Preprocessing_of_data_set, echo=FALSE}
+# Add a column with [[ to the Seurat object containing info about the percentage of mitochondrial genes, PercentageFeatureSet searches for genes that start with MT in the pbmc dataset.
+count_matrix[["Percent_mt"]] <- PercentageFeatureSet(count_matrix, pattern = "^MT-")
+
+# Show the first 5 lines of the meta data frame of Seurat object pbmc
+head(count_matrix@meta.data, 5)
+```
+
+```{r Visualize_dataframe, echo=FALSE, warning=FALSE, fig.cap="Violin plot of QC-metrics, in the first plot the unique number of genes per cell are visualised, in the second plot the amount of RNA molecules is shown and in the last plot the percentage of mitochondrial genes is shown", fig.pos='!htbp'}
+# Visualize dataframe as a violin plot
+VlnPlot(count_matrix, features = c("nFeature_RNA", "nCount_RNA", "Percent_mt"), ncol = 3)
+```
+
+```{r Normalize_data, include=FALSE, warning=FALSE}
+# To normalize the data a new object is created in which the data is normalized by using NormalizeData with argument LogNormalize. In theory this could also be done with the shortened command: pbmc_normalized <- NormalizeData(pbmc_filtered) 
+count_matrix <- NormalizeData(count_matrix, normalization.method = "LogNormalize", scale.factor = 10000)
+```

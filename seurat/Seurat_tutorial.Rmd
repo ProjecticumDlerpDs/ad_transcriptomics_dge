@@ -415,7 +415,7 @@ The selected markers originate from different clusters, allowing comparison of g
 VlnPlot(pbmc1, features = c("NKG7", "S100A8"))
 ```
 
-```{r featureplot_markers, }
+```{r featureplot_markers, include=FALSE}
 FeaturePlot(pbmc1, features = c("NKG7", "CST7", "S100A8", "LGALS2"))
 ```
 \newpage
