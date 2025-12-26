@@ -29,17 +29,21 @@ header-includes:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-```{r Load_packages, echo=FALSE, include=FALSE}
-# Load the required packages
-library(dplyr)
-library(Seurat)
-library(patchwork)
-library(here)
-library(ggplot2)
-```
+## Contents
+ - [Introduction](#introduction)
+ - [Research question](#research-question)
+ - [Packages and requirements](#packages-and-requirements)
+ - [About the count matrix](#about-the-count-matrix)
+ - [Loading the dataset and creating a Seurat object](#loading-the-dataset-and-creating-a-seurat-object)
+ - [Pre-processing of the dataset](#pre-processing-of-the-dataset)
+ - [Normalization of the dataset](#normalization-of-the-dataset)
+ - [Conclusion](Conclusion)
+ - [Discussion](Discussion)
 
 ## Introduction
-In this RMarkdown the FastQC and multiQC analysis of the .fastq-files from [GSE138852](https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSE138852&format=file&file=GSE138852%5Fcounts%2Ecsv%2Egz) is described. These .fastq-files contain the raw sequencing data and the phred-scores generated on the Illumina NextSeq 500 high-output lane with the 10x Genomics Chromium Single Cell 3′ Library & Gel Bead Kit v2. This markdown explains how identification of different cell types is be done and what the conclusion and discussion is in regards to the research question.
+This RMarkdown describes an analysis of the single-nucleus RNA-sequencing count matrix from [GSE138852](https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSE138852&format=file&file=GSE138852%5Fcounts%2Ecsv%2Egz) using Seurat. The dataset consists of a count matrix containing raw UMI counts derived from snRNAseq of human entorhinal cortex nuclei. Quality control of the nuclei was already performed according to the information provided in the article by Grubman _et al_., with low-quality cells removed during prior filtering steps.
+
+The scope of this RMarkdown includes normalization of the count matrix, identification of highly variable features, and dimensionality reduction. Cell-type annotation is performed using BRETIGEA but is not covered within this RMarkdown.
 
 ## Research question
 For this project the main research question is _"How can a reliable and reproducible analysis pipeline be set up to identify cell type-specific differential gene expression in Alzheimer's disease using a filtered expression matrix generated from snRNA-seq data?"_. Initially the research question was aimed at creating the entire pipeline with raw sequencing data as a starting point however, the publicly available data was lacking information on cellbarcodes and UMIs. Therefore the expression matrix published for GSE138852 was used as a starting point.
@@ -50,8 +54,16 @@ The sub-question(s) that is answered in this RMarkdown is as followed;
  - How should the count matrix be used, should the groups be separated (healthy vs. Alzheimers disease)? 
 
 ## Packages and Requirements
-In order to run the scripts for analysis in Seurat a few packages need to be installed first, for analysis an environment was created in miniconda with the command line prompt;
-XXXXXXXX
+In order to run the analysis in Seurat a few packages need to be installed first. Packages and package versions are managed using ```renv```, instructions for setting up the R project with ```renv``` are given in the [README](https://github.com/ProjecticumDlerpDs/ad_transcriptomics_dge/blob/main/README.md) of the GitHub repository *ad_transcriptomics_dge*. 
+
+```{r Load_packages, echo=FALSE, include=FALSE}
+# Load the required packages
+library(dplyr)
+library(Seurat)
+library(patchwork)
+library(here)
+library(ggplot2)
+```
 
 ## About the count matrix
 The count matrix was downloaded from the GEO-database. The count matrix is a table which stores the gene expression measurements of all measured nuclei. Usually the matrix contains the raw expression measurements but in the case of GSE138852 some filters were already applied, the matrix contains;
@@ -61,7 +73,7 @@ The count matrix was downloaded from the GEO-database. The count matrix is a tab
  - None of the features that are related to postmortem interval
  - Only cells that are within the 5th - 95th percentile regarding gene and UMI count. 
  
-### Loading the dataset and creating a Seurat object
+## Loading the dataset and creating a Seurat object
 The count matrix was stored in a comma separated values file (.csv-file). To be able to use this file for creating a Seurat object ```read.csv()``` was used to create a data.frame first. Then the data.frame was used as input for the function ```CreateSeuratObject()```. 
 
 ```{r Load_data_set, include=FALSE}
@@ -75,20 +87,50 @@ count_matrix <- read.csv(file = here("raw_data", "GSE138852_counts.csv"),
 count_matrix <- CreateSeuratObject(counts = count_matrix, project = "GSE138852")
 ```
 
-```{r Preprocessing_of_data_set, echo=FALSE}
-# Add a column with [[ to the Seurat object containing info about the percentage of mitochondrial genes, PercentageFeatureSet searches for genes that start with MT in the pbmc dataset.
-count_matrix[["Percent_mt"]] <- PercentageFeatureSet(count_matrix, pattern = "^MT-")
+## Pre-processing of the dataset
+Since the count matrix had already been pre-processed as described in "[About the count matrix](#About-the-count-matrix)", no additional pre-processing is performed at this point. However to check if the dataset was indeed pre-processed as stated in the article by Grubman _et al_. a column was added containing the percentage of mitochondrial features. A violin plot was generated and visualized in figure 1. 
 
-# Show the first 5 lines of the meta data frame of Seurat object pbmc
-head(count_matrix@meta.data, 5)
+```{r Preprocessing_of_data_set, echo=FALSE}
+# Add a column containing the percentage of genes starting with MT (mitochondrial).
+count_matrix[["Percent_mt"]] <- PercentageFeatureSet(count_matrix, pattern = "^MT-")
 ```
 
-```{r Visualize_dataframe, echo=FALSE, warning=FALSE, fig.cap="Violin plot of QC-metrics, in the first plot the unique number of genes per cell are visualised, in the second plot the amount of RNA molecules is shown and in the last plot the percentage of mitochondrial genes is shown", fig.pos='!htbp'}
+```{r Visualize_dataframe, echo=FALSE, warning=FALSE, fig.cap="Violin plots of quality-control metrics. Shown are the number of detected genes per nucleus (nFeature_RNA), total UMI counts per nucleus (nCount_RNA), and the percentage of mitochondrial gene expression (Percent_mt). The distributions of these plots are as expected with prior quality-control filtering as described by Grubman et al.", fig.pos='!htbp'}
 # Visualize dataframe as a violin plot
 VlnPlot(count_matrix, features = c("nFeature_RNA", "nCount_RNA", "Percent_mt"), ncol = 3)
 ```
 
+## Normalization of the dataset
+
 ```{r Normalize_data, include=FALSE, warning=FALSE}
-# To normalize the data a new object is created in which the data is normalized by using NormalizeData with argument LogNormalize. In theory this could also be done with the shortened command: pbmc_normalized <- NormalizeData(pbmc_filtered) 
-count_matrix <- NormalizeData(count_matrix, normalization.method = "LogNormalize", scale.factor = 10000)
+# To normalize the data count_matrix is replaced by a new object for count_matrix in which the data is normalized by using NormalizeData with the default settings LogNormalize and scale.factor=10000.
+count_matrix <- NormalizeData(count_matrix) 
 ```
+
+After normalizing the dataset ```FindVariableFeatures()``` was used to detect the most variable features. The selection method that was used is ```vst```, and ```nFeatures``` was set at 2000. A scatter plot of the output of ```FindVariableFeatures()``` generated and visualized in figure 2. 
+
+```{r Find_variable_features, echo=FALSE, warning=FALSE, message=FALSE, fig.cap="Scatterplot of variable features.", fig.pos='!htbp', fig.height=7}
+# Find variable features 
+count_matrix <- FindVariableFeatures(count_matrix, selection.method = "vst", nfeatures = 2000)
+# Identify the 10 most highly variable genes
+top10 <- head(VariableFeatures(count_matrix), 10)
+# plot variable features without and with labels (with LabelPoints())
+plot1 <- VariableFeaturePlot(count_matrix)+
+  ggtitle("Features of GSE138852 dataset") +
+  xlab("Average expression") +
+  ylab("Standardized variance") +
+  theme_classic()+
+    theme(
+    text = element_text(size = 10),        
+    plot.title = element_text(size = 11),  
+    axis.title = element_text(size = 10),
+    axis.text = element_text(size = 9),
+    legend.position = "bottom")
+plot1
+    
+```
+
+## Conclusion
+### Misschien dat dit result moet worden 
+In order to check if the count matrix contained the data as described by the article by Grubman _et al_. and the GEO-database (Accession number: GSE138852) the data was plotted in three violin plots (figure 1). These violin plots confirm that the filtering was applied as stated in the article by Grubman et al., most nuclei show between 400 to 800 detected features, the amount of total RNA molecules detected is between 500 - 1000 for most nuclei and the percentage of mitochondrial features is around 1,5% with no values >10%. 
+

@@ -5,6 +5,7 @@
 .RData
 .Ruserdata
 .DS_Store
+
 # Large reference files
 *.fa
 *.fa.gz
@@ -14,11 +15,21 @@
 *.fastq.gz
 *.sra
 GSE138852_counts.csv
+
 # Ignore nohup.out
 nohup.out
-# Ignore several folders
+
+# Ignore the followig directories
 /references/
 /analyses/
 /fastqc/
-
 seurat/filtered_gene_bc_matrices/
+# Renv
+renv/library/
+renv/staging/
+
+# Output files 
+*.html
+*.pdf
+*.log
+

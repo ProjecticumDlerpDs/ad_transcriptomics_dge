@@ -7,6 +7,7 @@ This project aims to develop a reliable and reproducible data-analysis pipeline 
 - [Data](#data)
 - [Folderstructure](#folderstructure)
 - [Packages and dependencies](#packages-and-dependencies)
+- [Usage instructions for this repository](#usage-instructions-for-this-repository)
 - [Authors and contact](#authors-and-contact)
 
 ___
@@ -43,7 +44,7 @@ In this project publicly available **DroNc-seq data** is used from the entorhina
 ___
 
 ## Packages and dependencies
-Prior to analysis the following packages need to be installed;
+Prior to analysis the following packages need to be installed, installation of packages is managed by ```renv```. 
 
 | Package         | Version     |
 |-----------------|-------------|
@@ -56,6 +57,9 @@ Prior to analysis the following packages need to be installed;
 |```dyplr```      |```1.1.4.``` |
 
 ---
+## Usage instructions for this repository
+
+
 ### Authors and contact
 
 - __Contributor:__ Meryem Stroosma
