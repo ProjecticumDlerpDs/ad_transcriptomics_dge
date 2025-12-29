@@ -23,7 +23,7 @@ nohup.out
 /references/
 /analyses/
 /fastqc/
-seurat/filtered_gene_bc_matrices/
+
 # Renv
 renv/library/
 renv/staging/

@@ -114,20 +114,24 @@ After normalizing the dataset ```FindVariableFeatures()``` was used to detect th
 count_matrix <- FindVariableFeatures(count_matrix, selection.method = "vst", nfeatures = 2000)
 # Identify the 10 most highly variable genes
 top10 <- head(VariableFeatures(count_matrix), 10)
-# plot variable features without and with labels (with LabelPoints())
-plot1 <- VariableFeaturePlot(count_matrix)+
-  ggtitle("Features of GSE138852 dataset") +
-  xlab("Average expression") +
-  ylab("Standardized variance") +
-  theme_classic()+
-    theme(
-    text = element_text(size = 10),        
-    plot.title = element_text(size = 11),  
+# plot variable features with labels (with LabelPoints())
+plot1 <- VariableFeaturePlot(count_matrix) %>%
+  LabelPoints(points = top10, repel = TRUE, size = 3) +
+  labs(
+    title = "Features of GSE138852 dataset",
+    subtitle = "Top 10 most variable features are labeled",
+    x = "Average expression",
+    y = "Standardized variance"
+  ) +
+  theme_classic() +
+  theme(
+    text = element_text(size = 10),
+    plot.title = element_text(size = 11),
     axis.title = element_text(size = 10),
     axis.text = element_text(size = 9),
-    legend.position = "bottom")
+    legend.position = "bottom"
+  ) 
 plot1
-    
 ```
 
 ## Conclusion
