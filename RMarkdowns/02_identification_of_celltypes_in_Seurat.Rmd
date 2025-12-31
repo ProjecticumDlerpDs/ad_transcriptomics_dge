@@ -73,9 +73,9 @@ The count matrix was downloaded from the GEO-database. The count matrix is a tab
  - None of the features that are related to postmortem interval
  - Only cells that are within the 5th - 95th percentile regarding gene and UMI count. 
 
-Navigate to the directory *ad_transcriptomics/scripts* and run the script for downloading the countmatrix from the terminal with the following command:
+Navigate to the directory *ad_transcriptomics/scripts* and run the script for downloading the count matrix from the terminal with the following command:
 ```{bash run script 06_download_countmatrix.sh, eval = FALSE}
-bash 06_download_countmatrix_fastq.sh
+bash 06_download_countmatrix.sh
 ```
 
 ## Loading the dataset and creating a Seurat object
@@ -106,12 +106,14 @@ VlnPlot(count_matrix, features = c("nFeature_RNA", "nCount_RNA", "Percent_mt"), 
 ```
 
 ## Normalization of the dataset
+The count matrix was normalized using ```NormalizeData()```. For normalization the default settings of Seurat were used which means that the argument ```LogNormalize``` was used. With this argument feature counts per cell are divided by the total counts and multiplied by the ```scale.factor```. The default setting for ```scale.factor``` is 10.000.
 
 ```{r Normalize_data, include=FALSE, warning=FALSE}
 # To normalize the data count_matrix is replaced by a new object for count_matrix in which the data is normalized by using NormalizeData with the default settings LogNormalize and scale.factor=10000.
 count_matrix <- NormalizeData(count_matrix) 
 ```
 
+## Identification of highly variable features
 After normalizing the dataset ```FindVariableFeatures()``` was used to detect the most variable features. The selection method that was used is ```vst```, and ```nFeatures``` was set at 2000. A scatter plot of the output of ```FindVariableFeatures()``` generated and visualized in figure 2. 
 
 ```{r Find_variable_features, echo=FALSE, warning=FALSE, message=FALSE, fig.cap="Scatterplot of variable features.", fig.pos='!htbp', fig.height=7}
@@ -139,7 +141,27 @@ plot1 <- VariableFeaturePlot(count_matrix) %>%
 plot1
 ```
 
+## Data scaling
+To prepare the dataset for Principal Component Analysis (PCA), scaling was performed with ```ScaleData```. 
+
+```{r Scaling_data, echo=FALSE, warning=FALSE, message=FALSE}
+# Scale the data of the count matrix 
+count_matrix <- ScaleData(count_matrix)
+```
+
+## Linear Dimension Reduction
+The scaled data is used as input for Principal Component Analysis (PCA). PCA is performed with the function ```RunPCA()```, within this function "```npcs```" was kept at 50 which is the default setting to determine how many PCs should be computed.
+
+```{r Run_PCA, echo=FALSE, warning=FALSE, message=FALSE}
+# Run PCA with RunPCA() on the count_matrix
+count_matrix <- RunPCA(count_matrix, features = VariableFeatures(object = count_matrix))
+```
+
+```{r Elbowplot_PCA1, echo=FALSE, warning=FALSE, message=FALSE, fig.height=3, fig.cap="Elbow plot of principal components. This plot shows the standard deviation of each principal component. Around PC8 an elbow is observed after PC8, nFeatures = 2000."}
+# Create an elbowplot of the object with nfeatures = 2000
+ElbowPlot(count_matrix)
+```
+
 ## Conclusion
-### Misschien dat dit result moet worden 
 In order to check if the count matrix contained the data as described by the article by Grubman _et al_. and the GEO-database (Accession number: GSE138852) the data was plotted in three violin plots (figure 1). These violin plots confirm that the filtering was applied as stated in the article by Grubman et al., most nuclei show between 400 to 800 detected features, the amount of total RNA molecules detected is between 500 - 1000 for most nuclei and the percentage of mitochondrial features is around 1,5% with no values >10%. 
 
