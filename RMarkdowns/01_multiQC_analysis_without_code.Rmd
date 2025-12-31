@@ -72,7 +72,7 @@ After creating an output directory the script uses the _SRR_Acc_List.txt_ and re
 
 The script takes a long time since the downloads are quite large, therefore it is recommended to add ```nohup``` and ```&``` to the command line to run the script on the background of the terminal.
 Navigate to the scripts folder and run this script from the terminal with the following command:
-```{bash run script 01__download_SRR_fastq.sh, eval = FALSE}
+```{bash run script 01_download_SRR_fastq.sh, eval = FALSE}
 nohup bash 01_download_SRR_fastq.sh &
 ```
 

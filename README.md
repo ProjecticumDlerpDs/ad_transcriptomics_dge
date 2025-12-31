@@ -18,36 +18,49 @@ In this project publicly available **DroNc-seq data** is used from the entorhina
 ## Folderstructure
 
 ```
-├── ad_transcriptomics_dge.Rproj
+~/ad_transcriptomics_dge
+├── RMarkdowns
 ├── analyses
 │   └── fastqc
+│       └── multiqc_data
 ├── raw_data
-│   ├── GSE138852_counts.csv
-│   └── SRR_Acc_List.txt
 ├── references
-│   ├── 737K-august-2016.txt.gz
-│   ├── GRCh38.primary_assembly.genome.fa.gz
-│   ├── STAR_index
-│   └── gencode.v49.annotation.gtf.gz
+├── renv
+│   ├── library
+│   └── staging
 ├── scripts
-│   ├── 01_download_SRR_fastq.sh
-│   ├── 02_fastqc.sh
-│   ├── 03_get_genome_reference.sh
-│   ├── 04_create_star_index.sh
-│   └── 05_STARsolo_alignment.sh
-├── seurat
-│   ├── Seurat_tutorial.Rmd
-│   ├── Seurat_tutorial.pdf
-│   └── filtered_gene_bc_matrices
-└── README.md
+└── seurat
+    └── filtered_gene_bc_matrices
+        └── hg19
 ```
 ___
 
 ## Packages and dependencies
-Prior to analysis the following packages need to be installed, installation of packages is managed by ```renv```. 
+Prior to any analysis the required packages need to be installed, installation of packages is managed by ```renv```. 
 
+1. Install the renv package from the console:
+
+```r
+install.packages("renv")
+```
+
+2. Check if the renv.lock file was fetched after cloning this repository, if this is not the case the packages won't be installed properly:
+
+```r
+file.exists("~/ad_transcriptomics_dge/renv.lock")
+```
+
+3. Restore the project environment:
+
+```r
+renv::restore()
+```
+
+
+The following packages are listed by renv as direct dependencies:
 | Package         | Version     |
 |-----------------|-------------|
+|```renv```       |```1.1.5.``` |
 | ```miniconda``` |```25.3.1``` |
 | ```sra-tools``` |```3.2.1.1```|
 |```STAR```       |```2.7.11b```|

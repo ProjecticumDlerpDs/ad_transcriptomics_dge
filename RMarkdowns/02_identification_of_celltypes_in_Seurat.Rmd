@@ -72,7 +72,12 @@ The count matrix was downloaded from the GEO-database. The count matrix is a tab
  - Only nuclei with less then 10% of the total features being mitochondrial
  - None of the features that are related to postmortem interval
  - Only cells that are within the 5th - 95th percentile regarding gene and UMI count. 
- 
+
+Navigate to the directory *ad_transcriptomics/scripts* and run the script for downloading the countmatrix from the terminal with the following command:
+```{bash run script 06_download_countmatrix.sh, eval = FALSE}
+bash 06_download_countmatrix_fastq.sh
+```
+
 ## Loading the dataset and creating a Seurat object
 The count matrix was stored in a comma separated values file (.csv-file). To be able to use this file for creating a Seurat object ```read.csv()``` was used to create a data.frame first. Then the data.frame was used as input for the function ```CreateSeuratObject()```. 
 
