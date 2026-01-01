@@ -1,21 +1,71 @@
-# Pipeline for Differential Gene Expression Analysis in Alzheimers disease
-
-## Description
-This project aims to develop a reliable and reproducible data-analysis pipeline for **single-nucleus RNA-seq (snRNA-seq)** data in order to identify **cell-type-specific differential gene expression** in Alzheimer’s disease.
+# Pipeline for Differential Gene Expression (DGE) Analysis in Alzheimers disease
 
 ## Contents
 - [Data](#data)
 - [Folderstructure](#folderstructure)
-- [Packages and dependencies](#packages-and-dependencies)
 - [Usage instructions for this repository](#usage-instructions-for-this-repository)
+  - [Packages and dependencies](#packages-and-dependencies)
+  - [Analysis](#analysis)
 - [Authors and contact](#authors-and-contact)
 
 ___
 
+## Description
+This project aims to develop a reliable and reproducible data-analysis pipeline for single-nucleus RNA sequencing (snRNA-seq) data, with the goal of identifying cell-type-specific differential gene expression (DGE) in Alzheimer’s disease.
+
+The initial research question was:
+
+How can a reliable and reproducible analysis pipeline be established to identify cell-type-specific differential gene expression from snRNA-seq data in Alzheimer’s disease?
+
+During data acquisition, raw FASTQ files were retrieved from the GEO database. However, these files lacked unique molecular identifiers (UMIs) and cell/nucleus barcode information, which are essential for snRNA-seq DGE analysis. Consequently, answering the original research question using raw data was not feasible.
+To overcome this limitation, the project was adapted to use the count matrix of GSE138852. This allows for downstream analysis while maintaining the focus DGE-analysis and reproducibility.
+
+**Research question**
+
+How can a reliable and reproducible analysis pipeline be established to identify cell-type-specific differential gene expression in Alzheimer’s disease using a filtered expression matrix from single-nucleus RNA sequencing (snRNA-seq) data?
+
+**Sub-questions**
+
+ 1. Do the sequencing reads have a high enough Q-score to further analyse the data (Q ≥ 30)?
+ 2. Can the most variable genes be identified using the filtered count matrix?
+    1. Can the dataset be loaded in its entirety, or must it be divided into two groups (healthy vs. Alzheimer's)?
+ 3. How can dimension reduction with PCA in Seurat be applied to the combined healthy and Alzheimer's dataset? 
+    1. Must the dataset first be grouped by condition?
+ 4. Can different cell types be distinguished from each other with BRETIGEA based on features found after sequencing RNA from the nuclei?
+ 5. Can the reliability of annotating different cell types be validated?
+ 6. What steps are necessary to perform differential gene expression analysis? (This should include looking at differences in expression profiles of the same cell types in both conditions).
+
+___
+
 ## Data
-In this project publicly available **DroNc-seq data** is used from the entorhinal cortex published by **Grubman et al.** (GEO ID: [GSE138852](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE138852)), containing nuclei from six Alzheimer patients and six controls (13,214 nuclei total).
+In this project publicly available **DroNc-seq data** is used from the entorhinal cortex published by **Grubman et al.** (GEO ID: [GSE138852](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE138852)).
+
+**Raw sequencing data (FASTQ files)**
+
+The raw data consist of paired-end FASTQ files generated from single-nucleus RNA sequencing of post-mortem human entorhinal cortex tissue from individuals with Alzheimer’s disease and healthy controls.
+Sequencing libraries were prepared using 10x Genomics Chromium Single Cell 3′ v2, sequencing was performed with the Illumina NextSeq 500 platform.
+
+Each FASTQ file contains sequencing reads derived from individual nuclei and includes cDNA sequence reads, corresponding to the nuclear RNA transcripts. 
+These raw reads represent unprocessed sequencing output and require alignment, barcode/UMI processing and normalization before gene expression analysis. 
+However, as mentioned in [Description](#description), the barcodes and UMIs are not available in the retrieved FASTQ files.
+
+**Count matrix**
+
+The file ```GSE138852_counts.csv.gz``` contains a processed gene expression count matrix generated from the raw FASTQ files by Grubman _et al_ (2019). 
+Reads were aligned to a pre-mRNA human reference genome (GRCh38) and quantified using Cell Ranger. The aligned reads, cell barcodes and UMIs were used to create the count matrix.
+The resulting matrix contains raw UMI counts, with rows corresponding to genes and columns corresponding to individual nuclei. 
+The following filters were applied for quality control: 
+
+ - 100 genes associated with the post-mortem interval (PMI) were excluded from the dataset.
+ - Nuclei with a number of detected genes outside the 5th and 95th percentiles were excluded.
+ - Nuclei with a total UMI count outside the 5th and 95th percentiles were excluded.
+ - Nuclei in which more than 10% of UMIs were assigned to mitochondrial RNA were excluded.
+The final dataset includes 13,214 high-quality nuclei and 10,850 genes. 
+
+___
 
 ## Folderstructure
+For this project the following folder structure was used:
 
 ```
 ~/ad_transcriptomics_dge
@@ -35,7 +85,9 @@ In this project publicly available **DroNc-seq data** is used from the entorhina
 ```
 ___
 
-## Packages and dependencies
+## Usage instructions for this repository
+
+### Packages and dependencies
 Prior to any analysis the required packages need to be installed, installation of packages is managed by ```renv```. 
 
 1. Install the renv package from the console:
@@ -58,6 +110,7 @@ renv::restore()
 
 
 The following packages are listed by renv as direct dependencies:
+
 | Package         | Version     |
 |-----------------|-------------|
 |```renv```       |```1.1.5.``` |
@@ -68,10 +121,22 @@ The following packages are listed by renv as direct dependencies:
 |```here```       |```1.0.1.``` |
 |```patchwork```  |```1.3.2.``` |
 |```dyplr```      |```1.1.4.``` |
+|```BRETIGEA```   |```XXX```    |
 
----
-## Usage instructions for this repository
+### Analysis
+ 1. In order to check whether the quality of the sequencing data is sufficient the raw FASTQ files were retrieved and analysed. Analysis is described in ```01_multiQC_analysis_without_code.Rmd``` and ```01_multiQC_analysis_with_code.Rmd```. The workflow in these RMarkdowns is as followed;
+    1. Retrieve the FASTQ files with ```01_downloadSRR_fastq.sh```.
+    2. Perform fastQC analysis with ```02_fastqc.sh ```.
+    3. Navigate to the directory ```~/ad_transcriptomics_dge/analyses/fastqc``` and run multiQC analysis from the commandline in the terminal with ```multiqc.```.
+ 2. ```02_identification_most_variable_features_in_Seurat``` describes the identification of most variable features dimension reduction with Principal Component Analysis. The workflow in this markdown is as followed;
+    1. Retrieve the count matrix with ```06_download_countmatrix.sh```.
+    2. Preparation of the data
+    3. Normalization and selection of the most variable features
+    4. Dimension reduction with Principal Component Analysis
+    5. Clustering of Nucleï
+ 
 
+___
 
 ### Authors and contact
 
@@ -79,6 +144,8 @@ The following packages are listed by renv as direct dependencies:
 - __E-mail:__ meryem.stroosma@gmail.com
 - __GitHub User:__ https://github.com/mstroosma
 - __GitHub Repository:__ https://github.com/ProjecticumDlerpDs/ad_transcriptomics_dge.git
+
+___
 
 
 

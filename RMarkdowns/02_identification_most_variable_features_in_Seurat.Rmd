@@ -33,13 +33,13 @@ knitr::opts_chunk$set(echo = TRUE)
  - [Introduction](#introduction)
  - [Research question](#research-question)
  - [Packages and requirements](#packages-and-requirements)
- - [About the count matrix](#about-the-count-matrix)
- - [Loading the dataset and creating a Seurat object](#loading-the-dataset-and-creating-a-seurat-object)
- - [Pre-processing of the dataset](#pre-processing-of-the-dataset)
- - [Normalization of the dataset](#normalization-of-the-dataset)
+ - [Preparation of the data](#preparation-of-the-data)
+ - [Normalization and selection of the most variable features](#normalization-and-selection-of-the-most-variable-features)
+ - [Dimension reduction with Principal Component Analysis](#dimension-reduction-with-principal-component-analysis)
  - [Conclusion](Conclusion)
  - [Discussion](Discussion)
 
+___
 ## Introduction
 This RMarkdown describes an analysis of the single-nucleus RNA-sequencing count matrix from [GSE138852](https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSE138852&format=file&file=GSE138852%5Fcounts%2Ecsv%2Egz) using Seurat. The dataset consists of a count matrix containing raw UMI counts derived from snRNAseq of human entorhinal cortex nuclei. Quality control of the nuclei was already performed according to the information provided in the article by Grubman _et al_., with low-quality cells removed during prior filtering steps.
 
@@ -52,7 +52,8 @@ The sub-question(s) that is answered in this RMarkdown is as followed;
 
  - Can the most variable features be identified with the filtered expression count matrix as input? 
  - How should the count matrix be used, should the groups be separated (healthy vs. Alzheimers disease)? 
-
+ 
+___
 ## Packages and Requirements
 In order to run the analysis in Seurat a few packages need to be installed first. Packages and package versions are managed using ```renv```, instructions for setting up the R project with ```renv``` are given in the [README](https://github.com/ProjecticumDlerpDs/ad_transcriptomics_dge/blob/main/README.md) of the GitHub repository *ad_transcriptomics_dge*. 
 
@@ -65,7 +66,9 @@ library(here)
 library(ggplot2)
 ```
 
-## About the count matrix
+## Preparation of the data
+
+### About the count matrix
 The count matrix was downloaded from the GEO-database. The count matrix is a table which stores the gene expression measurements of all measured nuclei. Usually the matrix contains the raw expression measurements but in the case of GSE138852 some filters were already applied, the matrix contains;
 
  - 13214 nuclei (before filtering 14876 nuclei were measured)
@@ -78,7 +81,7 @@ Navigate to the directory *ad_transcriptomics/scripts* and run the script for do
 bash 06_download_countmatrix.sh
 ```
 
-## Loading the dataset and creating a Seurat object
+### Loading the dataset and creating a Seurat object
 The count matrix was stored in a comma separated values file (.csv-file). To be able to use this file for creating a Seurat object ```read.csv()``` was used to create a data.frame first. Then the data.frame was used as input for the function ```CreateSeuratObject()```. 
 
 ```{r Load_data_set, include=FALSE}
@@ -91,8 +94,9 @@ count_matrix <- read.csv(file = here("raw_data", "GSE138852_counts.csv"),
 # Initialize the Seurat object with the pre-filtered count matrix
 count_matrix <- CreateSeuratObject(counts = count_matrix, project = "GSE138852")
 ```
+\newpage
 
-## Pre-processing of the dataset
+### Pre-processing of the dataset
 Since the count matrix had already been pre-processed as described in "[About the count matrix](#About-the-count-matrix)", no additional pre-processing is performed at this point. However to check if the dataset was indeed pre-processed as stated in the article by Grubman _et al_. a column was added containing the percentage of mitochondrial features. A violin plot was generated and visualized in figure 1. 
 
 ```{r Preprocessing_of_data_set, echo=FALSE}
@@ -105,7 +109,9 @@ count_matrix[["Percent_mt"]] <- PercentageFeatureSet(count_matrix, pattern = "^M
 VlnPlot(count_matrix, features = c("nFeature_RNA", "nCount_RNA", "Percent_mt"), ncol = 3)
 ```
 
-## Normalization of the dataset
+___
+## Normalization and selection of the most variable features
+### Normalization of the dataset
 The count matrix was normalized using ```NormalizeData()```. For normalization the default settings of Seurat were used which means that the argument ```LogNormalize``` was used. With this argument feature counts per cell are divided by the total counts and multiplied by the ```scale.factor```. The default setting for ```scale.factor``` is 10.000.
 
 ```{r Normalize_data, include=FALSE, warning=FALSE}
@@ -113,7 +119,7 @@ The count matrix was normalized using ```NormalizeData()```. For normalization t
 count_matrix <- NormalizeData(count_matrix) 
 ```
 
-## Identification of highly variable features
+### Identification of highly variable features
 After normalizing the dataset ```FindVariableFeatures()``` was used to detect the most variable features. The selection method that was used is ```vst```, and ```nFeatures``` was set at 2000. A scatter plot of the output of ```FindVariableFeatures()``` generated and visualized in figure 2. 
 
 ```{r Find_variable_features, echo=FALSE, warning=FALSE, message=FALSE, fig.cap="Scatterplot of variable features.", fig.pos='!htbp', fig.height=7}
@@ -141,7 +147,8 @@ plot1 <- VariableFeaturePlot(count_matrix) %>%
 plot1
 ```
 
-## Data scaling
+## Dimension reduction with Principal Component Analysis
+### Data scaling
 To prepare the dataset for Principal Component Analysis (PCA), scaling was performed with ```ScaleData```. 
 
 ```{r Scaling_data, echo=FALSE, warning=FALSE, message=FALSE}
@@ -149,7 +156,7 @@ To prepare the dataset for Principal Component Analysis (PCA), scaling was perfo
 count_matrix <- ScaleData(count_matrix)
 ```
 
-## Linear Dimension Reduction
+### Linear Dimension Reduction
 The scaled data is used as input for Principal Component Analysis (PCA). PCA is performed with the function ```RunPCA()```, within this function "```npcs```" was kept at 50 which is the default setting to determine how many PCs should be computed.
 
 ```{r Run_PCA, echo=FALSE, warning=FALSE, message=FALSE}
@@ -162,6 +169,19 @@ count_matrix <- RunPCA(count_matrix, features = VariableFeatures(object = count_
 ElbowPlot(count_matrix)
 ```
 
+```{r Cluster_cells, include=FALSE}
+# Find Nearest Neighbors for dataset, default setting was used for k.param. 9 PCs were used. 
+count_matrix <- FindNeighbors(count_matrix, dims = 1:9)
+
+# Identification of clusters, resolution was set at 0.5. 
+count_matrix <- FindClusters(count_matrix, resolution = 0.5)
+```
+
+```{r Plot_UMAP1, echo=FALSE, warning=FALSE, message=FALSE, fig.cap= "UMAP of object with nfeatures=200. Cells are visualised in two-dimensional UMAP space based on the first 9 PCs. Each point represents a single nucleus and colours indicate clusters identified using FindClusters (resolution = 0.5)."}
+count_matrix <- RunUMAP(count_matrix, dims = 1:9)
+
+DimPlot(count_matrix, reduction = "umap")
+```
 ## Conclusion
 In order to check if the count matrix contained the data as described by the article by Grubman _et al_. and the GEO-database (Accession number: GSE138852) the data was plotted in three violin plots (figure 1). These violin plots confirm that the filtering was applied as stated in the article by Grubman et al., most nuclei show between 400 to 800 detected features, the amount of total RNA molecules detected is between 500 - 1000 for most nuclei and the percentage of mitochondrial features is around 1,5% with no values >10%. 
 
