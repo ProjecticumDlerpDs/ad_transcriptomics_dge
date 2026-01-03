@@ -1,5 +1,5 @@
 ---
-title: "02 Identification of different celltypes in Seurat"
+title: "Identification most variable features in Seurat"
 author: "Meryem Stroosma"
 date: "`r Sys.Date()`"
 output: 
@@ -165,23 +165,35 @@ count_matrix <- RunPCA(count_matrix, features = VariableFeatures(object = count_
 ```
 
 ```{r Elbowplot_PCA1, echo=FALSE, warning=FALSE, message=FALSE, fig.height=3, fig.cap="Elbow plot of principal components. This plot shows the standard deviation of each principal component. Around PC8 an elbow is observed after PC8, nFeatures = 2000."}
-# Create an elbowplot of the object with nfeatures = 2000
+# Create an elbowplot of count_matrix after PCA
 ElbowPlot(count_matrix)
 ```
+
+Explain about using the loading plot to visualize which genes contribute to PCs and how this is a good indication to see if the amount of PCs computed is accurate 
+
+```{r Plot_PCA1, echo=FALSE, warning=FALSE, message=FALSE, fig.height=10, fig.cap="Principal component loading plot showing the top contributing genes for PC1–PC4, based on 2000 highly variable genes derived from the filtered snRNA-seq expression matrix."}
+# Visualize PC1 through PC4 in a PC feature loading plot for count_matrix
+VizDimLoadings(count_matrix, dims = 1:4, reduction = "pca")
+``` 
+
+Explain how the resolution was chosen, at 0.5 the clusters seem clean and compact without too much subclustering. The next step is to see if different celltypes can be annotated based on these clusters, 0.7 also seems an okay resolution however the larger clusters are splitting into subclusters which are less homogenous 
 
 ```{r Cluster_cells, include=FALSE}
 # Find Nearest Neighbors for dataset, default setting was used for k.param. 9 PCs were used. 
 count_matrix <- FindNeighbors(count_matrix, dims = 1:9)
-
-# Identification of clusters, resolution was set at 0.5. 
 count_matrix <- FindClusters(count_matrix, resolution = 0.5)
 ```
 
-```{r Plot_UMAP1, echo=FALSE, warning=FALSE, message=FALSE, fig.cap= "UMAP of object with nfeatures=200. Cells are visualised in two-dimensional UMAP space based on the first 9 PCs. Each point represents a single nucleus and colours indicate clusters identified using FindClusters (resolution = 0.5)."}
-count_matrix <- RunUMAP(count_matrix, dims = 1:9)
+```{r Plot_UMAP1, echo=FALSE, warning=FALSE, message=FALSE, fig.cap= "UMAP of object with nfeatures=2000. Cells are visualised in two-dimensional UMAP space based on the first 9 PCs. Each point represents a single nucleus and colours indicate clusters identified using FindClusters (resolution = 0.5)."}
+# Identification of clusters, resolution was set at 0.5. 
 
-DimPlot(count_matrix, reduction = "umap")
+count_matrix <- RunUMAP(count_matrix, dims = 1:9)
+DimPlot(count_matrix1, reduction = "umap")
 ```
+
+
+
+
 ## Conclusion
 In order to check if the count matrix contained the data as described by the article by Grubman _et al_. and the GEO-database (Accession number: GSE138852) the data was plotted in three violin plots (figure 1). These violin plots confirm that the filtering was applied as stated in the article by Grubman et al., most nuclei show between 400 to 800 detected features, the amount of total RNA molecules detected is between 500 - 1000 for most nuclei and the percentage of mitochondrial features is around 1,5% with no values >10%. 
 
