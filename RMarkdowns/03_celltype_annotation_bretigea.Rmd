@@ -1,0 +1,49 @@
+---
+title: "Celltype annotation with BRETIGEA"
+author: "Meryem Stroosma"
+date: "`r Sys.Date()`"
+output: 
+  pdf_document:
+    latex_engine: xelatex
+    fig_caption: true
+
+# Use colours for hyperlinks
+colorlinks: true
+linkcolor: purple
+urlcolor: purple
+citecolor: purple
+
+header-includes:
+  - \usepackage{fontspec}
+  - \usepackage{fancyvrb}
+  - \usepackage[section]{placeins}
+  - \usepackage{float} 
+  - \usepackage{blindtext}
+  - \setmainfont{DejaVu Sans Condensed}
+  - \setsansfont{DejaVu Sans}
+  - \setmonofont{DejaVu Sans Mono}
+  - \DefineVerbatimEnvironment{Highlighting}{Verbatim}{fontsize=\footnotesize,commandchars=\\\{\}}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Contents
+ - [Introduction](#introduction)
+ - [Research question](#research-question)
+ 
+ 
+ ___
+## Packages and Requirements
+In order to run the analysis in Seurat a few packages need to be installed first. Packages and package versions are managed using ```renv```, instructions for setting up the R project with ```renv``` are given in the [README](https://github.com/ProjecticumDlerpDs/ad_transcriptomics_dge/blob/main/README.md) of the GitHub repository *ad_transcriptomics_dge*. 
+
+```{r Load_packages, echo=FALSE, include=FALSE}
+# Load the required packages
+library(dplyr)
+library(Seurat)
+library(BRETIGEA)
+library(patchwork)
+library(here)
+library(ggplot2)
+```

@@ -2,26 +2,27 @@
 title: "Identification most variable features in Seurat"
 author: "Meryem Stroosma"
 date: "`r Sys.Date()`"
-output:
-  html_document:
-    df_print: paged
+output: 
   pdf_document:
     latex_engine: xelatex
     fig_caption: true
+
+# Use colours for hyperlinks
 colorlinks: true
 linkcolor: purple
 urlcolor: purple
 citecolor: purple
+
 header-includes:
-- \usepackage{fontspec}
-- \usepackage{fancyvrb}
-- \usepackage[section]{placeins}
-- \usepackage{float}
-- \usepackage{blindtext}
-- \setmainfont{DejaVu Sans Condensed}
-- \setsansfont{DejaVu Sans}
-- \setmonofont{DejaVu Sans Mono}
-- \DefineVerbatimEnvironment{Highlighting}{Verbatim}{fontsize=\footnotesize,commandchars=\\\{\}}
+  - \usepackage{fontspec}
+  - \usepackage{fancyvrb}
+  - \usepackage[section]{placeins}
+  - \usepackage{float} 
+  - \usepackage{blindtext}
+  - \setmainfont{DejaVu Sans Condensed}
+  - \setsansfont{DejaVu Sans}
+  - \setmonofont{DejaVu Sans Mono}
+  - \DefineVerbatimEnvironment{Highlighting}{Verbatim}{fontsize=\footnotesize,commandchars=\\\{\}}
 ---
 
 ```{r setup, include=FALSE}
@@ -180,16 +181,28 @@ Explain how the resolution was chosen, at 0.5 the clusters seem clean and compac
 ```{r Cluster_cells, include=FALSE}
 # Find Nearest Neighbors for dataset, default setting was used for k.param. 9 PCs were used. 
 count_matrix <- FindNeighbors(count_matrix, dims = 1:9)
+# Identification of clusters, resolution was set at 0.5. 
 count_matrix <- FindClusters(count_matrix, resolution = 0.5)
 ```
 
 ```{r Plot_UMAP1, echo=FALSE, warning=FALSE, message=FALSE, fig.cap= "UMAP of object with nfeatures=2000. Cells are visualised in two-dimensional UMAP space based on the first 9 PCs. Each point represents a single nucleus and colours indicate clusters identified using FindClusters (resolution = 0.5)."}
-# Identification of clusters, resolution was set at 0.5. 
-
+# Create a UMAP visualisation after finding clusters for PCs 1 through 9
 count_matrix <- RunUMAP(count_matrix, dims = 1:9)
+
+# Plot the UMAP
 DimPlot(count_matrix, reduction = "umap")
 ```
 
+```{r Save_seurat_object_to_RDS, echo=FALSE}
+# Create the output directory with here, show no warnings if directory allready exists
+dir.create(here("analyses","seurat"), showWarnings = FALSE)
+
+# Save the seurat object after analysis as RDS object to be available for furthur analysis
+saveRDS(
+  count_matrix,
+  file = here("analyses", "seurat", "seurat_umap_clustering_res0.5.rds")
+)
+```
 
 
 
