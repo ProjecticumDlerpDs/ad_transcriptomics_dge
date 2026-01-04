@@ -122,17 +122,17 @@ count_matrix <- NormalizeData(count_matrix)
 ### Identification of highly variable features
 After normalizing the dataset ```FindVariableFeatures()``` was used to detect the most variable features. The selection method that was used is ```vst```, and ```nFeatures``` was set at 2000. A scatter plot of the output of ```FindVariableFeatures()``` generated and visualized in figure 2. 
 
-```{r Find_variable_features, echo=FALSE, warning=FALSE, message=FALSE, fig.cap="Scatterplot of variable features.", fig.pos='!htbp', fig.height=7}
+```{r Find_variable_features, echo=FALSE, warning=FALSE, message=FALSE, fig.cap="Scatterplot of highly variable features in the GSE138852 count matrix. Average gene expression is plotted on the x-axis against standardized variance on the y-axis. Highly variable genes (red dots) were selected for further analysis. The top 10 most variable genes were labeled.", fig.pos='!htbp', fig.height=7}
 # Find variable features 
 count_matrix <- FindVariableFeatures(count_matrix, selection.method = "vst", nfeatures = 2000)
-# Identify the 10 most highly variable genes
-top10 <- head(VariableFeatures(count_matrix), 10)
+# Identify the 20 most highly variable genes
+top20 <- head(VariableFeatures(count_matrix), 20)
 # plot variable features with labels (with LabelPoints())
 plot1 <- VariableFeaturePlot(count_matrix) %>%
-  LabelPoints(points = top10, repel = TRUE, size = 3) +
+  LabelPoints(points = top20, repel = TRUE, size = 3) +
   labs(
     title = "Features of GSE138852 dataset",
-    subtitle = "Top 10 most variable features are labeled",
+    subtitle = "Top 20 most variable features are labeled",
     x = "Average expression",
     y = "Standardized variance"
   ) +
