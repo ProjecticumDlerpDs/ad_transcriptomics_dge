@@ -4,6 +4,10 @@
 # Install packages 
 # conda install bioconda::sra-tools
 
+# Activate conda environment
+source ~/miniconda3/etc/profile.d/conda.sh
+conda activate snrnaseq
+
 # Stop when errors occur
 set -euo pipefail
 
@@ -11,6 +15,12 @@ set -euo pipefail
 project="$HOME/ad_transcriptomics_dge"
 SRR_list="$project/raw_data/SRR_Acc_List.txt" 
 output="$project/raw_data/fastq_data"
+
+if ! command -v fastq-dump >/dev/null 2>&1; then
+  echo "'fastq-dump' was not found." >&2
+  echo "Please install sratoolkit." >&2
+  exit 1
+fi
 
 # Create output directory
 mkdir -p "$output"

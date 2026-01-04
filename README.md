@@ -106,7 +106,9 @@ ___
 ## Usage instructions for this repository
 
 ### Packages and dependencies
-Prior to any analysis the required packages need to be installed, installation of packages is managed by ```renv```. 
+Prior to any analysis the required packages need to be installed, installation of Rpackages is managed by ```renv``` for other packages ```conda``` is used. 
+
+**To install ```renv``` and set up the project the instructions are as followed;**
 
 1. Install the renv package from the console:
 
@@ -126,20 +128,75 @@ file.exists("~/ad_transcriptomics_dge/renv.lock")
 renv::restore()
 ```
 
+**To install ```conda```, set up an environment and install packages the instrucions are as followed;**
 
-The following packages are listed by renv as direct dependencies:
+1. Navigate to the home directory and download the script to install conda from the console:
 
-| Package         | Version     |
-|-----------------|-------------|
-|```renv```       |```1.1.5.``` |
-| ```miniconda``` |```25.3.1``` |
-| ```sra-tools``` |```3.2.1.1```|
-|```STAR```       |```2.7.11b```|
-| ```Seurat```    |```5.3.1.``` |
-|```here```       |```1.0.1.``` |
-|```patchwork```  |```1.3.2.``` |
-|```dyplr```      |```1.1.4.``` |
-|```BRETIGEA```   |```XXX```    |
+```bash
+cd ~
+wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
+```
+
+2. Run the script from the console:
+
+```bash
+bash Miniconda3-latest-Linux-x86_64.sh
+```
+
+3. Answer the questions as followed; 
+   1. yes > license
+   2. installation location: press Enter (~/miniconda3)
+   3. conda init > yes
+
+4. Check if conda is installed, the output should be ```conda 25.3.1```:
+
+```bash
+conda --version
+```
+
+5. Create a conda environment named "snrnaseq": 
+``` bash 
+conda create -n snrnaseq
+```
+
+6. Activate conda environment, the environment name should be visible in de command line after this: 
+```bash
+conda activate snrnaseq
+```
+7. Install required packages in the environment:
+
+sra-toolkit:
+``` bash
+conda install bioconda::sra-tools
+```
+
+FastQC:
+```bash
+conda install bioconda::fastqc
+```
+
+STAR:
+``` bash
+conda install bioconda::star
+```
+
+Whenever one of the packages installed in a conda environment are used in a script, the conda environment should be activated prior to running this script.
+
+**The following packages are listed by renv as direct dependencies:**
+
+| Package         | Version     |Package manager|
+|-----------------|-------------|---------------|
+|```renv```       |```1.1.5.``` |      N/A      |
+| ```miniconda``` |```25.3.1``` |      N/A      |
+| ```sra-tools``` |```3.2.1.1```|     conda     |
+|```fastqc```     |```0.12```   |     conda     |
+|```STAR```       |```2.7.11b```|     conda     |
+| ```Seurat```    |```5.3.1.``` |     renv      |
+|```here```       |```1.0.1.``` |     renv      |
+|```patchwork```  |```1.3.2.``` |     renv      |
+|```dyplr```      |```1.1.4.``` |     renv      |
+|```BRETIGEA```   |```XXX```    |     renv      |
+
 
 ### Analysis
  1. In order to check whether the quality of the sequencing data is sufficient the raw FASTQ files were retrieved and analysed. Analysis is described in ```01_multiQC_analysis_without_code.Rmd``` and ```01_multiQC_analysis_with_code.Rmd```. The workflow in these RMarkdowns is as followed;

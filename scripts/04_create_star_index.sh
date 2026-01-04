@@ -6,7 +6,7 @@
 # downstream in the analysis to efficiently align sample sequences.
 
 # Activate environment: 
-# conda activate star
+# conda activate snrnaseq
 
 # Install STAR: 
 # conda install bioconda::star

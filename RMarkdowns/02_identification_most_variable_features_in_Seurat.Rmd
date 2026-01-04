@@ -2,27 +2,26 @@
 title: "Identification most variable features in Seurat"
 author: "Meryem Stroosma"
 date: "`r Sys.Date()`"
-output: 
+output:
+  html_document:
+    df_print: paged
   pdf_document:
     latex_engine: xelatex
     fig_caption: true
-
-# Use colours for hyperlinks
 colorlinks: true
 linkcolor: purple
 urlcolor: purple
 citecolor: purple
-
 header-includes:
-  - \usepackage{fontspec}
-  - \usepackage{fancyvrb}
-  - \usepackage[section]{placeins}
-  - \usepackage{float} 
-  - \usepackage{blindtext}
-  - \setmainfont{DejaVu Sans Condensed}
-  - \setsansfont{DejaVu Sans}
-  - \setmonofont{DejaVu Sans Mono}
-  - \DefineVerbatimEnvironment{Highlighting}{Verbatim}{fontsize=\footnotesize,commandchars=\\\{\}}
+- \usepackage{fontspec}
+- \usepackage{fancyvrb}
+- \usepackage[section]{placeins}
+- \usepackage{float}
+- \usepackage{blindtext}
+- \setmainfont{DejaVu Sans Condensed}
+- \setsansfont{DejaVu Sans}
+- \setmonofont{DejaVu Sans Mono}
+- \DefineVerbatimEnvironment{Highlighting}{Verbatim}{fontsize=\footnotesize,commandchars=\\\{\}}
 ---
 
 ```{r setup, include=FALSE}
@@ -188,7 +187,7 @@ count_matrix <- FindClusters(count_matrix, resolution = 0.5)
 # Identification of clusters, resolution was set at 0.5. 
 
 count_matrix <- RunUMAP(count_matrix, dims = 1:9)
-DimPlot(count_matrix1, reduction = "umap")
+DimPlot(count_matrix, reduction = "umap")
 ```
 
 

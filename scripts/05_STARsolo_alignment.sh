@@ -6,7 +6,7 @@
 
 # Activate environment: 
 source ~/miniconda3/etc/profile.d/conda.sh
-conda activate star
+conda activate snrnaseq
 
 # Stop the script upon errors
 set -euo pipefail
