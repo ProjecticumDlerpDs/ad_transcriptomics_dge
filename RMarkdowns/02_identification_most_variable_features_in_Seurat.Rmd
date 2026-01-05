@@ -26,7 +26,9 @@ header-includes:
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = FALSE,
+                      fig.pos = "H")
+
 ```
 
 ## Contents
@@ -57,7 +59,7 @@ ___
 ## Packages and Requirements
 In order to run the analysis in Seurat a few packages need to be installed first. Packages and package versions are managed using ```renv```, instructions for setting up the R project with ```renv``` are given in the [README](https://github.com/ProjecticumDlerpDs/ad_transcriptomics_dge/blob/main/README.md) of the GitHub repository *ad_transcriptomics_dge*. 
 
-```{r Load_packages, echo=FALSE, include=FALSE}
+```{r Load_packages, include=FALSE}
 # Load the required packages
 library(dplyr)
 library(Seurat)
@@ -77,7 +79,7 @@ The count matrix was downloaded from the GEO-database. The count matrix is a tab
  - Only cells that are within the 5th - 95th percentile regarding gene and UMI count. 
 
 Navigate to the directory *ad_transcriptomics/scripts* and run the script for downloading the count matrix from the terminal with the following command:
-```{bash run script 06_download_countmatrix.sh, eval = FALSE}
+```{bash run script 06_download_countmatrix.sh, eval = FALSE, echo = TRUE}
 bash 06_download_countmatrix.sh
 ```
 
@@ -99,12 +101,12 @@ count_matrix <- CreateSeuratObject(counts = count_matrix, project = "GSE138852")
 ### Pre-processing of the dataset
 Since the count matrix had already been pre-processed as described in "[About the count matrix](#About-the-count-matrix)", no additional pre-processing is performed at this point. However to check if the dataset was indeed pre-processed as stated in the article by Grubman _et al_. a column was added containing the percentage of mitochondrial features. A violin plot was generated and visualized in figure 1. 
 
-```{r Preprocessing_of_data_set, echo=FALSE}
+```{r Preprocessing_of_data_set}
 # Add a column containing the percentage of genes starting with MT (mitochondrial).
 count_matrix[["Percent_mt"]] <- PercentageFeatureSet(count_matrix, pattern = "^MT-")
 ```
 
-```{r Visualize_dataframe, echo=FALSE, warning=FALSE, fig.cap="Violin plots of quality-control metrics. Shown are the number of detected genes per nucleus (nFeature_RNA), total UMI counts per nucleus (nCount_RNA), and the percentage of mitochondrial gene expression (Percent_mt). The distributions of these plots are as expected with prior quality-control filtering as described by Grubman et al.", fig.pos='!htbp'}
+```{r Visualize_dataframe, warning=FALSE, fig.cap="Violin plots of quality-control metrics. Shown are the number of detected genes per nucleus (nFeature_RNA), total UMI counts per nucleus (nCount_RNA), and the percentage of mitochondrial gene expression (Percent_mt). The distributions of these plots are as expected with prior quality-control filtering as described by Grubman et al.", fig.pos='!htbp'}
 # Visualize dataframe as a violin plot
 VlnPlot(count_matrix, features = c("nFeature_RNA", "nCount_RNA", "Percent_mt"), ncol = 3)
 ```
@@ -122,7 +124,7 @@ count_matrix <- NormalizeData(count_matrix)
 ### Identification of highly variable features
 After normalizing the dataset ```FindVariableFeatures()``` was used to detect the most variable features. The selection method that was used is ```vst```, and ```nFeatures``` was set at 2000. A scatter plot of the output of ```FindVariableFeatures()``` generated and visualized in figure 2. 
 
-```{r Find_variable_features, echo=FALSE, warning=FALSE, message=FALSE, fig.cap="Scatterplot of highly variable features in the GSE138852 count matrix. Average gene expression is plotted on the x-axis against standardized variance on the y-axis. Highly variable genes (red dots) were selected for further analysis. The top 10 most variable genes were labeled.", fig.pos='!htbp', fig.height=7}
+```{r Find_variable_features, warning=FALSE, message=FALSE, fig.cap="Scatterplot of highly variable features in the GSE138852 count matrix. Average gene expression is plotted on the x-axis against standardized variance on the y-axis. Highly variable genes (red dots) were selected for further analysis. The top 10 most variable genes were labeled.", fig.pos='!htbp', fig.height=7}
 # Find variable features 
 count_matrix <- FindVariableFeatures(count_matrix, selection.method = "vst", nfeatures = 2000)
 # Identify the 20 most highly variable genes
@@ -151,7 +153,7 @@ plot1
 ### Data scaling
 To prepare the dataset for Principal Component Analysis (PCA), scaling was performed with ```ScaleData```. 
 
-```{r Scaling_data, echo=FALSE, warning=FALSE, message=FALSE}
+```{r Scaling_data, warning=FALSE, message=FALSE}
 # Scale the data of the count matrix 
 count_matrix <- ScaleData(count_matrix)
 ```
@@ -159,19 +161,20 @@ count_matrix <- ScaleData(count_matrix)
 ### Linear Dimension Reduction
 The scaled data is used as input for Principal Component Analysis (PCA). PCA is performed with the function ```RunPCA()```, within this function "```npcs```" was kept at 50 which is the default setting to determine how many PCs should be computed.
 
-```{r Run_PCA, echo=FALSE, warning=FALSE, message=FALSE}
+```{r Run_PCA, warning=FALSE, message=FALSE}
 # Run PCA with RunPCA() on the count_matrix
 count_matrix <- RunPCA(count_matrix, features = VariableFeatures(object = count_matrix))
 ```
+After running PCA the first 20 PCs were visualized in an elbow plot (figure 3) with the standard deviation on the y-axis and the different PCs in ranked order on the x-axis. This plot was used to determine how many PCs should be retained for further analysis by identifying the elbow. The elbow is the point where the decrease in standard deviation between PCs is minimizing. Beyond this point, remaining variation is more likely to be caused by noise rather than biologically meaningful variance. In figure 3 the elbow was located around PC8, to be certain that no biologically meaningful variance was lost PC1 throughout PC9 for further analysis. 
 
-```{r Elbowplot_PCA1, echo=FALSE, warning=FALSE, message=FALSE, fig.height=3, fig.cap="Elbow plot of principal components. This plot shows the standard deviation of each principal component. Around PC8 an elbow is observed after PC8, nFeatures = 2000."}
+```{r Elbowplot_PCA1, warning=FALSE, message=FALSE, fig.height=3, fig.cap="Elbow plot of principal components. This plot shows the standard deviation of each principal component. Around PC8 an elbow is observed after PC8, nFeatures = 2000."}
 # Create an elbowplot of count_matrix after PCA
 ElbowPlot(count_matrix)
 ```
 
-Explain about using the loading plot to visualize which genes contribute to PCs and how this is a good indication to see if the amount of PCs computed is accurate 
+To visualize which genes contribute to the different principal components, a PCA loading plot was created.  
 
-```{r Plot_PCA1, echo=FALSE, warning=FALSE, message=FALSE, fig.height=10, fig.cap="Principal component loading plot showing the top contributing genes for PC1–PC4, based on 2000 highly variable genes derived from the filtered snRNA-seq expression matrix."}
+```{r Plot_PCA1, warning=FALSE, message=FALSE, fig.height=10, fig.cap="Principal component loading plot showing the top contributing genes for PC1–PC4, based on 2000 highly variable genes derived from the filtered snRNA-seq expression matrix."}
 # Visualize PC1 through PC4 in a PC feature loading plot for count_matrix
 VizDimLoadings(count_matrix, dims = 1:4, reduction = "pca")
 ``` 
@@ -182,24 +185,45 @@ Explain how the resolution was chosen, at 0.5 the clusters seem clean and compac
 # Find Nearest Neighbors for dataset, default setting was used for k.param. 9 PCs were used. 
 count_matrix <- FindNeighbors(count_matrix, dims = 1:9)
 # Identification of clusters, resolution was set at 0.5. 
-count_matrix <- FindClusters(count_matrix, resolution = 0.5)
+count_matrix1 <- FindClusters(count_matrix, resolution = 0.5)
+# Identification of clusters, resolution was set at 0.7. 
+count_matrix2 <- FindClusters(count_matrix, resolution = 0.7)
+# Identification of clusters, resolution was set at 1.0. 
+count_matrix3 <- FindClusters(count_matrix, resolution = 1.0)
 ```
 
-```{r Plot_UMAP1, echo=FALSE, warning=FALSE, message=FALSE, fig.cap= "UMAP of object with nfeatures=2000. Cells are visualised in two-dimensional UMAP space based on the first 9 PCs. Each point represents a single nucleus and colours indicate clusters identified using FindClusters (resolution = 0.5)."}
+```{r Plot_UMAP1, warning=FALSE, message=FALSE, fig.cap= "UMAP of object with nfeatures=2000. Cells are visualised in two-dimensional UMAP space based on the first 9 PCs. Each point represents a single nucleus and colours indicate clusters identified using FindClusters (resolution = 0.5)."}
 # Create a UMAP visualisation after finding clusters for PCs 1 through 9
-count_matrix <- RunUMAP(count_matrix, dims = 1:9)
+count_matrix1 <- RunUMAP(count_matrix1, dims = 1:9)
 
 # Plot the UMAP
-DimPlot(count_matrix, reduction = "umap")
+DimPlot(count_matrix1, reduction = "umap")
 ```
 
-```{r Save_seurat_object_to_RDS, echo=FALSE}
+```{r Plot_UMAP2, warning=FALSE, message=FALSE, fig.cap= "UMAP of object with nfeatures=2000. Cells are visualised in two-dimensional UMAP space based on the first 9 PCs. Each point represents a single nucleus and colours indicate clusters identified using FindClusters (resolution = 0.7)."}
+# Create a UMAP visualisation after finding clusters for PCs 1 through 9
+count_matrix2 <- RunUMAP(count_matrix2, dims = 1:9)
+
+# Plot the UMAP
+DimPlot(count_matrix2, reduction = "umap")
+```
+
+```{r Plot_UMAP3, warning=FALSE, message=FALSE, fig.cap= "UMAP of object with nfeatures=2000. Cells are visualised in two-dimensional UMAP space based on the first 9 PCs. Each point represents a single nucleus and colours indicate clusters identified using FindClusters (resolution = 1.0)."}
+# Create a UMAP visualisation after finding clusters for PCs 1 through 9
+count_matrix3 <- RunUMAP(count_matrix3, dims = 1:9)
+
+# Plot the UMAP
+DimPlot(count_matrix3, reduction = "umap")
+```
+
+
+```{r Save_seurat_object_to_RDS}
 # Create the output directory with here, show no warnings if directory allready exists
 dir.create(here("analyses","seurat"), showWarnings = FALSE)
 
 # Save the seurat object after analysis as RDS object to be available for furthur analysis
 saveRDS(
-  count_matrix,
+  count_matrix1,
   file = here("analyses", "seurat", "seurat_umap_clustering_res0.5.rds")
 )
 ```
