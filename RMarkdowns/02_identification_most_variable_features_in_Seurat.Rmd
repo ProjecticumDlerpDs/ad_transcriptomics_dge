@@ -41,6 +41,8 @@ knitr::opts_chunk$set(echo = FALSE,
  - [Clustering and UMAP visualisation](#clustering-and-umap-visualisation)
  - [Conclusion](Conclusion)
  - [Discussion](Discussion)
+ - [Save the Seurat object as RDS file](#save-the-seurat-object-as-rds)
+ - [Sources](#sources)
 
 ___
 ## Introduction
@@ -125,7 +127,7 @@ count_matrix <- NormalizeData(count_matrix)
 ### Identification of highly variable features
 After normalizing the dataset ```FindVariableFeatures()``` was used to detect the most variable features. The selection method that was used is ```vst```, and ```nFeatures``` was set at 2000. A scatter plot of the output of ```FindVariableFeatures()``` generated and visualized in figure 2. 
 
-```{r Find_variable_features, echo=FALSE, warning=FALSE, message=FALSE, fig.cap="Scatterplot of highly variable features in the GSE138852 count matrix. Average gene expression is plotted on the x-axis against standardized variance on the y-axis. Highly variable genes (red dots) were selected for further analysis. The top 10 most variable genes were labeled.", fig.pos='!htbp', fig.height=7}
+```{r Find_variable_features, echo=FALSE, warning=FALSE, message=FALSE, fig.cap="Scatterplot of highly variable features in the GSE138852 count matrix. Average gene expression is plotted on the x-axis against standardized variance on the y-axis. Highly variable genes (red dots) were selected for further analysis. The top 20 most variable genes were labeled.", fig.pos='!htbp', fig.height=6}
 # Find variable features 
 count_matrix <- FindVariableFeatures(count_matrix, selection.method = "vst", nfeatures = 2000)
 # Identify the 20 most highly variable genes
@@ -149,6 +151,8 @@ plot1 <- VariableFeaturePlot(count_matrix) %>%
   ) 
 plot1
 ```
+
+\newpage 
 
 ## Dimension reduction with Principal Component Analysis
 ### Data scaling
@@ -180,11 +184,13 @@ To visualize which genes contribute to the different principal components, PCA l
 VizDimLoadings(count_matrix, dims = 1:3, reduction = "pca")
 ``` 
 
+\newpage
+
 ## Clustering and UMAP visualisation
 
 ### Find nearest neighbours
 After PCA the data was reduced to 9 principal components, these components were used as input for clustering. Clustering was done with ```FindNeighbours()```, the dimensions were set at 1:9 and ```k.param``` was kept at the default value of 20 since lower values (k.param=10) caused the clusters scatter more and higher values (k.param=30) didn't seem to improve the data. 
-The output of ```FindNeighbours()``` was used as input for ```FindClusters()```. ```FindClusters()``` was used to verify which cells have a expression pattern more similar to each other and was eventially used to see to which cell type the different cells belong. The clustering resolution was tested at multiple values (0.5, 0.7, and 1.0) in order to determine the resolution that produced the most stable clusters without losing the specifity to annotate cell types downstream in analysis. The clusters with the different resolutions were shown in three UMAP plots in figure 5, figure 6 and figure 7.
+The output of ```FindNeighbours()``` was used as input for ```RunUMAP``` and for ```FindClusters()```. ```FindClusters()``` was used to verify which cells have a expression pattern more similar to each other and was eventually used to see to which cell type the different cells belong. The clustering resolution was tested at multiple values (0.5, 0.7, and 1.0) in order to determine the resolution that produced the most stable clusters without losing the specificity to annotate cell types downstream in analysis. The clusters with the different resolutions were shown in three UMAP plots in figure 5, figure 6 and figure 7.
 
 ```{r Plot_UMAP1, echo=FALSE, warning=FALSE, message=FALSE, fig.height=5, fig.width=6, fig.cap= "UMAP visualization of GSE138852. Cells are visualized in two-dimensional UMAP space using the first 9PCs. Each point represents a single nucleus, coloured by cluster assignment identified at resolution 0.5."}
 # FindNeighbours of PC1-9, with k.param = 20.
@@ -192,9 +198,9 @@ count_matrix <- FindNeighbors(count_matrix, dims = 1:9)
 # RunUMAP with input of find neighbours and PCA to determine coordinates of all cells in UMAP space
 count_matrix <- RunUMAP(count_matrix, dims = 1:9)  
 # FindClusters with different resolutions
-count_matrix1 <- FindClusters(count_matrix, resolution = 0.5)
-count_matrix2 <- FindClusters(count_matrix, resolution = 0.7)
-count_matrix3 <- FindClusters(count_matrix, resolution = 1.0)
+count_matrix1 <- FindClusters(count_matrix, resolution = 0.5, verbose=FALSE)
+count_matrix2 <- FindClusters(count_matrix, resolution = 0.7, verbose=FALSE)
+count_matrix3 <- FindClusters(count_matrix, resolution = 1.0, verbose=FALSE)
 # Plot the UMAP of res 0.5
 DimPlot(count_matrix1, reduction = "umap")
 ```
@@ -209,22 +215,53 @@ DimPlot(count_matrix2, reduction = "umap")
 DimPlot(count_matrix3, reduction = "umap")
 ```
 
-
-```{r Save_seurat_object_to_RDS}
-# Create the output directory with here, show no warnings if directory allready exists
-dir.create(here("analyses","seurat"), showWarnings = FALSE)
-
-# Save the seurat object after analysis as RDS object to be available for furthur analysis
-saveRDS(
-  count_matrix1,
-  file = here("analyses", "seurat", "seurat_umap_clustering_res0.5.rds")
-)
-```
-
-
+\newpage
 
 ## Conclusion
 In order to check if the count matrix contained the data as described by the article by Grubman _et al_. and the GEO-database (Accession number: GSE138852) the data was plotted in three violin plots (figure 1). These violin plots confirm that the filtering was applied as stated in the article by Grubman et al., most nuclei show between 400 to 800 detected features, the amount of total RNA molecules detected is between 500 - 1000 for most nuclei and the percentage of mitochondrial features is around 1,5% with no values >10%. 
+
+The elbow plot in figure 3 shows that the most variation in the dataset is caused by PC1 through PC8, to ensure no relevant data is lost PC1 through PC9 were retained for downstream analysis. In figure 4 the PCA loading were plotted, the PCA loadings of PC1 through PC3 indicate that some of the contributing genes are known as neuronal and microglial genes. It can be concluded that the amount of features used in PCA and the amount of PCs calculated are sufficient to capture relevant biological variation within the GSE138852 dataset.
+
+The UMAP plots in figure 6, with resolution 0.7, shows the most stable, well defined, clusters. Therefore, this resolution is used for downstream analysis.
+
+In relation to the research question the following is concluded;
+ - Can the most variable features be identified with the filtered expression count matrix as input? 
+ The most variable features can and were identified with the filtered expression matrix as input.
+ 
+ - How should the count matrix be used, should the groups be separated (healthy vs. Alzheimers disease)? 
+ For this part of analysis the data was not separated. The dataset was kept as one to identify the different cell types based on overall gene expression data. This is done since for differential gene expression analysis the comparison should be made between healthy and diseased condition in the same group of cells. This makes it crucial that cell types are defined consistently across both conditions.
+
+## Discussion
+This part of analysis was performed with a filtered expression matrix as input, for this reason no additional filtering was performed at this point. Using pre-filtered data makes analysis a lot faster, however there is no way of knowing the difference between the dataset pre-filtering and post-filtering. If this RMarkdown would be used on a different dataset the same functions could be used but processing and of the data should be re-evaluated. 
+
+The different settings that were used such as nfeatures, number of PCs and settings for resolution seem to produce relevant PCs and stable clusters in UMAP visualisation. However no celltypes were identified yet, this is to be done in **03_celltype_annotation_bretigea.Rmd**. This is a critical next step to validate whether the identified clusters correspond to known cell types. Confirmation of the reliability of the chosen settings will depend on the expression of marker genes within the clusters.
+
+### Save the Seurat object as RDS
+After analysis the Seurat object with the correct parameters was saved as .RDS file. The resolution of the object was stored in the title.
+
+```{r Save_seurat_object_to_RDS, echo=FALSE, warning=FALSE}
+# Create the output directory with here, show no warnings if directory allready exists
+dir.create(here("analyses","seurat"), showWarnings = FALSE)
+
+# Define output directory
+output_dir <- here("analyses", "seurat")
+
+# Define output file
+output_file <- here(output_dir, "seurat_umap_clustering_res0.7.rds")
+
+# Save the seurat object after analysis as RDS object to be available for furthur analysis
+saveRDS(
+  count_matrix2,
+  file = output_file
+)
+
+# Print message to inform about the name of the file and the directory
+message(
+  "The Seurat object  was stored as:\n",
+  "  File: ", basename(output_file), "\n",
+  "  Directory: ", output_dir
+)
+```
 
 
 ## Sources
