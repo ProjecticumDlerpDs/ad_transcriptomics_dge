@@ -1,0 +1,118 @@
+---
+title: "Celltype_annotation_SingleR"
+author: "Meryem Stroosma"
+date: "`r Sys.Date()`"
+output: 
+  pdf_document:
+    latex_engine: xelatex
+    fig_caption: true
+    
+params:
+  resolution: "0.5"
+  dataset_name: "GSE138852"
+
+# Use colours for hyperlinks
+colorlinks: true
+linkcolor: purple
+urlcolor: purple
+citecolor: purple
+
+header-includes:
+  - \usepackage{fontspec}
+  - \usepackage{fancyvrb}
+  - \usepackage[section]{placeins}
+  - \usepackage{float} 
+  - \usepackage{blindtext}
+  - \setmainfont{DejaVu Sans Condensed}
+  - \setsansfont{DejaVu Sans}
+  - \setmonofont{DejaVu Sans Mono}
+  - \DefineVerbatimEnvironment{Highlighting}{Verbatim}{fontsize=\footnotesize,commandchars=\\\{\}}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE,
+                      error = FALSE)
+```
+
+## Contents
+ - [Introduction](#introduction)
+ - [Research question](#research-question)
+ - [Packages and Requirements](#packages-and-requirements)
+ 
+## Introduction
+
+
+## Research question
+
+
+ ___
+## Packages and Requirements
+In order to run the analysis in Seurat a few packages need to be installed first. Packages and package versions are managed using ```renv```, instructions for setting up the R project with ```renv``` are given in the [README](https://github.com/ProjecticumDlerpDs/ad_transcriptomics_dge/blob/main/README.md) of the GitHub repository *ad_transcriptomics_dge*. 
+
+```{r setup_libraries, echo=FALSE, include=FALSE}
+# Load the required packages
+library(dplyr)
+library(Seurat)
+library(SingleR)
+library(celldex)
+library(patchwork)
+library(here)
+library(ggplot2)
+```
+
+```{r setup_find_seuratobject_function, echo=FALSE}
+# A function was created to load a Seurat object created with any given resolution, the resolution can be given by the user upon knitting this RMarkdown. 
+
+
+load_seurat_by_resolution <- function(resolution,
+                                      dir = c("analyses", "seurat"),
+                                      prefix = "seurat_umap_clustering_") {
+# Create a pattern to search for a filename, the clustering resolution can be given using params. The default resolution is 0.5.
+  res_pattern <- paste0("res", gsub("\\.", "\\\\.", resolution), "\\.rds$")
+
+# Search in the specified directory for Seurat objects matching the pattern.
+  files <- list.files(
+    path = do.call(here, as.list(dir)),
+    pattern = paste0("^", prefix, res_pattern),
+    full.names = TRUE
+  )
+# If no files are found then stop execution.
+  if (length(files) == 0)
+    stop("No Seurat object found for resolution ", resolution)
+
+# If multiple files with the same pattern are found then stop execution.
+  if (length(files) > 1)
+    stop("Multiple Seurat objects found for resolution ", resolution)
+
+# Print which file is used to load the Seurat object to be used for further analysis.
+  message("Loading Seurat object: ", basename(files))
+  readRDS(files)
+}
+```
+
+
+```{r Load_Seurat_object}
+# Load the seurat object based on the param that was used for resolution
+seurat_obj <- load_seurat_by_resolution(params$resolution)
+```
+
+```{r Extract_raw_counts}
+normalised_counts <- LayerData(seurat_obj, assay = "RNA", layer = 'data')
+```
+
+```{r Get_reference_dataset}
+ref <- celldex::HumanPrimaryCellAtlasData()
+
+```
+
+```{r Run_SingleR}
+celltype_annotation <- SingleR(test=normalised_counts,
+                               ref = ref,
+                               labels = ref$label.main)
+```
+
+```{r Plot_heatmap}
+plotScoreHeatmap(celltype_annotation)
+```
+
+

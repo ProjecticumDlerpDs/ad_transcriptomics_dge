@@ -234,7 +234,7 @@ In relation to the research question the following is concluded;
 ## Discussion
 This part of analysis was performed with a filtered expression matrix as input, for this reason no additional filtering was performed at this point. Using pre-filtered data makes analysis a lot faster, however there is no way of knowing the difference between the dataset pre-filtering and post-filtering. If this RMarkdown would be used on a different dataset the same functions could be used but processing and of the data should be re-evaluated. 
 
-The different settings that were used such as nfeatures, number of PCs and settings for resolution seem to produce relevant PCs and stable clusters in UMAP visualisation. However no celltypes were identified yet, this is to be done in **03_celltype_annotation_bretigea.Rmd**. This is a critical next step to validate whether the identified clusters correspond to known cell types. Confirmation of the reliability of the chosen settings will depend on the expression of marker genes within the clusters.
+The different settings that were used such as nFeatures, number of PCs and settings for resolution seem to produce relevant PCs and stable clusters in UMAP visualization. However no cell types were identified yet, this is to be done in **03_celltype_annotation_bretigea.Rmd**. This is a critical next step to validate whether the identified clusters correspond to known cell types. Confirmation of the reliability of the chosen settings will depend on the expression of marker genes within the clusters.
 
 ### Save the Seurat object as RDS
 After analysis the Seurat object with the correct parameters was saved as .RDS file. The resolution of the object was stored in the title.
@@ -249,7 +249,7 @@ output_dir <- here("analyses", "seurat")
 # Define output file
 output_file <- here(output_dir, "seurat_umap_clustering_res0.7.rds")
 
-# Save the seurat object after analysis as RDS object to be available for furthur analysis
+# Save the Seurat object after analysis as RDS object to be available for further analysis
 saveRDS(
   count_matrix2,
   file = output_file
@@ -257,7 +257,7 @@ saveRDS(
 
 # Print message to inform about the name of the file and the directory
 message(
-  "The Seurat object  was stored as:\n",
+  "The Seurat object was stored as:\n",
   "  File: ", basename(output_file), "\n",
   "  Directory: ", output_dir
 )
