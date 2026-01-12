@@ -51,13 +51,11 @@ In order to run the analysis in Seurat a few packages need to be installed first
 
 ```{r setup_libraries, echo=FALSE, include=FALSE}
 # Load the required packages
-library(dplyr)
 library(Seurat)
-library(SingleR)
-library(celldex)
-library(patchwork)
 library(here)
-library(ggplot2)
+library(SingleR)
+library(scRNAseq)
+library(SummarizedExperiment)
 ```
 
 ```{r setup_find_seuratobject_function, echo=FALSE}
@@ -98,17 +96,35 @@ seurat_obj <- load_seurat_by_resolution(params$resolution)
 
 ```{r Extract_raw_counts}
 normalised_counts <- LayerData(seurat_obj, assay = "RNA", layer = 'data')
+
 ```
 
 ```{r Get_reference_dataset}
-ref <- celldex::HumanPrimaryCellAtlasData()
 
+ref <- DarmanisBrainData()
+
+# If SingleR expects logcounts, create it from counts without scater
+if (!"logcounts" %in% assayNames(ref)){ 
+  
+# counts(ref) should exist for DarmanisBrainData; use SummarizedExperiment::assay to be explicit
+cts <- SummarizedExperiment::assay(ref, "counts")
+
+# log1p works on sparse dgCMatrix too
+SummarizedExperiment::assay(ref, "logcounts") <- log1p(cts)
+}
 ```
 
 ```{r Run_SingleR}
-celltype_annotation <- SingleR(test=normalised_counts,
-                               ref = ref,
-                               labels = ref$label.main)
+labels <- colData(ref)[["cell.type"]]
+keep <- !is.na(labels)
+
+celltype_annotation <- SingleR(
+  test   = normalised_counts,
+  ref    = ref[, keep],
+  labels = labels[keep],
+  assay.type.ref = "logcounts"
+)
+
 ```
 
 ```{r Plot_heatmap}

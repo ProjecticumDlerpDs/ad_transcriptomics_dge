@@ -30,23 +30,25 @@ header-includes:
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = FALSE,
+                      error = FALSE)
 ```
+## Contents 
+ - [Introduction](#introduction) 
+ - [Research question](#research-question) 
+ - [Packages and requirements](#packages-and-requirements)
+ - [Load Seurat object](#load-seurat-object)
+ - [Marker discovery per cluster](#marker-discovery-per-cluster)
+ - [Marker plots](#marker-plots)
+ - [Cell type annotation with BRETIGEA](#cell-type-annotation-with-bretigea)
+ - [Assign labels back to Seurat](#assign-labels-back-to-seurat)
+ - [UMAP visualization](#umap-visualization)
+ - [Save outputs](#save-outputs)
 
-## Contents
- - [Introduction](#introduction)
- - [Research question](#research-question)
- - [Packages and Requirements](#packages-and-requirements)
- 
-## Introduction
+___ 
 
-
-## Research question
-
-
- ___
-## Packages and Requirements
-In order to run the analysis in Seurat a few packages need to be installed first. Packages and package versions are managed using ```renv```, instructions for setting up the R project with ```renv``` are given in the [README](https://github.com/ProjecticumDlerpDs/ad_transcriptomics_dge/blob/main/README.md) of the GitHub repository *ad_transcriptomics_dge*. 
+## Packages and Requirements 
+In order to run the analysis in Seurat a few packages need to be installed first. Packages and package versions are managed using ```renv```, instructions for setting up the R project with ```renv``` are given in the [README](https://github.com/ProjecticumDlerpDs/ad_transcriptomics_dge/blob/main/README.md) of the GitHub repository *ad_transcriptomics_dge*.
 
 ```{r setup_libraries, echo=FALSE, include=FALSE}
 # Load the required packages
@@ -88,16 +90,146 @@ load_seurat_by_resolution <- function(resolution,
 }
 ```
 
-
-```{r Load_Seurat_object, echo=FALSE}
-# Load the seurat object based on the param that was used for resolution
+## Load Seurat object
+```{r Load_Seurat_object}
 seurat_obj <- load_seurat_by_resolution(params$resolution)
 
-# Use GetAssayData to make sure the seurat object is compatible with BRETIGEA
-seurat_to_bretigea <- GetAssayData(seurat_obj, assay = "RNA", layer = "data")
+# Ensure identities are clusters
+Idents(seurat_obj) <- "seurat_clusters"
 ```
 
-```{r BRET}
-str(seurat_to_bretigea, list.len = 5)
+## Marker discovery per cluster
+
+```{r Find_cluster_markers}
+markers_all <- FindAllMarkers(
+  seurat_obj,
+  only.pos = TRUE,          # annotation-focused: positive markers only
+  test.use = "wilcox",
+  min.pct = 0.25,
+  logfc.threshold = 0.25
+)
+
+top_markers <- markers_all %>%
+  group_by(cluster) %>%
+  slice_max(order_by = avg_log2FC, n = 10) %>%
+  ungroup()
+
+top_markers
 ```
 
+## Marker plots
+
+### Heatmap of top markers
+
+```{r Heatmap_top_markers, fig.height=8, fig.width=8}
+top5 <- markers_all %>%
+  group_by(cluster) %>%
+  slice_max(order_by = avg_log2FC, n = 5) %>%
+  pull(gene) %>%
+  unique()
+
+# Scale only the genes we plot (keeps it fast)
+seurat_obj <- ScaleData(seurat_obj, features = top5, verbose = FALSE)
+
+DoHeatmap(seurat_obj, features = top5, group.by = "seurat_clusters") + NoLegend()
+```
+
+### DotPlot of canonical brain markers
+
+```{r DotPlot_canonical_markers, fig.height=6, fig.width=10}
+canonical <- c(
+  "RBFOX3","SNAP25","SYT1",          # neurons
+  "SLC17A7",                         # excitatory
+  "GAD1","GAD2",                     # inhibitory
+  "AQP4","ALDH1A1","SLC1A2","SLC1A3",# astrocytes
+  "MBP","PLP1","MOG",                # oligodendrocytes
+  "PDGFRA","CSPG4","VCAN",           # OPC
+  "P2RY12","CX3CR1","C1QA",          # microglia
+  "PECAM1","VWF","KDR",              # endothelial
+  "PDGFRB","RGS5","ACTA2"            # pericyte/VSMC
+)
+
+canonical_present <- canonical[canonical %in% rownames(seurat_obj)]
+
+DotPlot(seurat_obj, features = canonical_present) + RotatedAxis()
+```
+
+### FeaturePlot (UMAP) for key markers
+
+```{r FeaturePlot_key_markers, fig.height=7, fig.width=10}
+key_markers <- c("SLC17A7","GAD1","AQP4","MBP","P2RY12","PECAM1")
+key_present <- key_markers[key_markers %in% rownames(seurat_obj)]
+
+FeaturePlot(seurat_obj, features = key_present, ncol = 3)
+```
+
+## Cell type annotation with BRETIGEA
+
+### Create expression matrix per cluster (average expression)
+```{r create_expression_matrix_per_cluster}
+pb <- AverageExpression(
+  seurat_obj,
+  assays = "RNA",
+  layer  = "data"
+)$RNA
+
+# FIX: remove the 'g' prefix added by Seurat for identities starting with numbers
+colnames(pb) <- sub("^g", "", colnames(pb))
+```
+
+### Select BRETIGEA marker reference and run scoring
+
+```{r select_Bretigea_reference}
+markers <- BRETIGEA::markers_df_human_brain
+genes_use <- intersect(unique(markers$marker), rownames(pb))
+pb_use <- as.matrix(pb[genes_use, , drop = FALSE])
+```
+
+```{r run_bretigea_on_clusters}
+ct_res <- BRETIGEA::findCells(
+  inputMat = pb_use,
+  markers  = markers,
+  nMarker  = 20,
+  method   = "PCA",
+  scale    = FALSE
+)
+```
+
+### Create one label per cluster (max score)
+```{r Create_label_per_cluster}
+scores <- as.matrix(ct_res)
+
+# clusters are rows; cell types are columns
+cluster_to_celltype <- apply(scores, 1, function(x) colnames(scores)[which.max(x)])
+
+# Store scores + label mapping for transparency
+bretigea_cluster_scores <- as.data.frame(scores)
+bretigea_cluster_scores$cluster <- rownames(scores)
+bretigea_cluster_scores$BRETIGEA_label <- unname(cluster_to_celltype[rownames(scores)])
+
+bretigea_cluster_scores
+```
+
+## Assign labels back to Seurat
+
+```{r Return_labels_to_Seuratobj}
+clusters <- as.character(Idents(seurat_obj))
+celltype_by_cell <- unname(cluster_to_celltype[clusters])
+
+celltype_by_cell[is.na(celltype_by_cell)] <- "Unknown"
+names(celltype_by_cell) <- colnames(seurat_obj)
+
+# Store BRETIGEA call as a metadata column
+seurat_obj <- AddMetaData(seurat_obj, celltype_by_cell, col.name = "BRETIGEA_celltype")
+
+# Optional: a more generic level-1 column (you can later edit/merge labels if needed)
+seurat_obj$celltype_level1 <- seurat_obj$BRETIGEA_celltype
+
+table(seurat_obj$BRETIGEA_celltype, useNA = "ifany")
+```
+
+## UMAP visualization
+
+```{r Plot_celltypes_umap, fig.width=8, fig.height=6}
+DimPlot(seurat_obj, reduction = "umap", group.by = "BRETIGEA_celltype", label = TRUE) + NoLegend()
+```
