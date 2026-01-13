@@ -203,12 +203,21 @@ Whenever one of the packages installed in a conda environment are used in a scri
     1. Retrieve the FASTQ files with ```01_downloadSRR_fastq.sh```.
     2. Perform fastQC analysis with ```02_fastqc.sh ```.
     3. Navigate to the directory ```~/ad_transcriptomics_dge/analyses/fastqc``` and run multiQC analysis from the commandline in the terminal with ```multiqc.```.
- 2. ```02_identification_most_variable_features_in_Seurat``` describes the identification of most variable features dimension reduction with Principal Component Analysis. The workflow in this markdown is as followed;
+ 2. After quality control the logical next step would be aligning genes to a reference genome and annotating genes them, but since no UMIs and barcodes were available the next step in this workflow is finding the most variable features. ```02_identification_most_variable_features_in_Seurat``` describes the identification of most variable features dimension reduction with Principal Component Analysis. The workflow in this markdown is as followed;
     1. Retrieve the count matrix with ```06_download_countmatrix.sh```.
-    2. Preparation of the data
-    3. Normalization and selection of the most variable features
-    4. Dimension reduction with Principal Component Analysis
-    5. Clustering of Nucleï
+    2. Preparation of the data.
+    3. Normalization and selection of the most variable features.
+    4. Dimension reduction with Principal Component Analysis.
+    5. Clustering of Nucleï.
+    6. Saving the Seurat object for downstream analysis.
+ 3. After finding the most variable features and clustering the cell types are identified with BRETIGEA. This process is performed in ```03_celltype_annotation_bretigea```, and the workflow is as followed;
+    1. Knit the RMarkdown with parameters by opening the Rmarkdown and clicking on knit, then click on knit with parameters and provide the parameters. The resolution depends on the picked value for resolution in clustering of the nucleï and the default is 0.7
+    2. Or render the RMarkdown from the console with, to prevent any bugs it is recommended that the console is "clean" at this point: 
+    
+```r
+rmarkdown::render("03_celltype_annotation_bretigea.Rmd",
+params = list(resolution = 0.7, dataset_name = "GSE138852"),clean = TRUE)
+``` 
  
 
 ___

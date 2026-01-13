@@ -8,7 +8,7 @@ output:
     fig_caption: true
     
 params:
-  resolution: "0.5"
+  resolution: "0.7"
   dataset_name: "GSE138852"
 
 # Use colours for hyperlinks
@@ -62,12 +62,11 @@ library(ggplot2)
 
 ```{r setup_find_seuratobject_function, echo=FALSE}
 # A function was created to load a Seurat object created with any given resolution, the resolution can be given by the user upon knitting this RMarkdown. 
-
-
 load_seurat_by_resolution <- function(resolution,
                                       dir = c("analyses", "seurat"),
                                       prefix = "seurat_umap_clustering_") {
-# Create a pattern to search for a filename, the clustering resolution can be given using params. The default resolution is 0.5.
+
+  # Create a pattern to search for a filename, the clustering resolution can be given using params. The default resolution is 0.7.
   res_pattern <- paste0("res", gsub("\\.", "\\\\.", resolution), "\\.rds$")
 
 # Search in the specified directory for Seurat objects matching the pattern.
@@ -92,23 +91,26 @@ load_seurat_by_resolution <- function(resolution,
 
 ## Load Seurat object
 ```{r Load_Seurat_object}
+# Load the Seurat object with the previously made function load_seurat_by_resolution()
 seurat_obj <- load_seurat_by_resolution(params$resolution)
-
-# Ensure identities are clusters
-Idents(seurat_obj) <- "seurat_clusters"
 ```
 
 ## Marker discovery per cluster
+Prior to analysis in BRETIGEA markers are identified per cluster in Seurat with the function ```FindAllMarkers()```.  
+This step is not required for analysis in BRETIGEA however, identifying the markers in the different clusters provides relevant information about cluster composition. By verifying the expressed markers per cluster it is possible to predict which cell types are present. For annotation purposes, only positive markers were selected with the argument ```only.pos``` since cell types are mainly defined by the different genes they express. The test used to compare expression values was a Wilcoxon rank-sum test, which is a non-parametric test that doesn't assume normality. In FindAllMarkers this test compares gene expression values of a cluster to all other cells, finding genes that are uniquely expressed in that cluster. 
+
 
 ```{r Find_cluster_markers}
+# Find markers within the clusters in seurat object with Wilcoxon rank sum test
 markers_all <- FindAllMarkers(
   seurat_obj,
-  only.pos = TRUE,          # annotation-focused: positive markers only
-  test.use = "wilcox",
-  min.pct = 0.25,
-  logfc.threshold = 0.25
+  only.pos = TRUE,      # Only use positive markers
+  test.use = "wilcox",  # Use Wilcoxon rank sum test
+  min.pct = 0.25,       # The feature must be detected in at least 25% of the cells within this cluster
+  logfc.threshold = 0.25 # Minimum log fold change of 0.25 compared to other cells 
 )
 
+# Create an object with the top markers per cluster to be used in a heatmap
 top_markers <- markers_all %>%
   group_by(cluster) %>%
   slice_max(order_by = avg_log2FC, n = 10) %>%
@@ -222,7 +224,7 @@ names(celltype_by_cell) <- colnames(seurat_obj)
 # Store BRETIGEA call as a metadata column
 seurat_obj <- AddMetaData(seurat_obj, celltype_by_cell, col.name = "BRETIGEA_celltype")
 
-# Optional: a more generic level-1 column (you can later edit/merge labels if needed)
+
 seurat_obj$celltype_level1 <- seurat_obj$BRETIGEA_celltype
 
 table(seurat_obj$BRETIGEA_celltype, useNA = "ifany")
