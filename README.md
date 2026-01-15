@@ -54,7 +54,8 @@ How can a reliable and reproducible analysis pipeline be established to identify
  6. What steps are necessary to perform differential gene expression analysis? (This should include looking at differences in expression profiles of the same cell types in both conditions).
 
 **Workflow**
-![Figure 1: Workflow for differential gene expression analysis of single-nucleus RNA sequencing data in Alzheimers Disease]("ad_transcriptomics_dge/figures/Workflow.png")
+
+![Figure 1: Workflow for differential gene expression analysis of single-nucleus RNA sequencing data in Alzheimers Disease](figures/Workflow.png)
 
 ___
 
