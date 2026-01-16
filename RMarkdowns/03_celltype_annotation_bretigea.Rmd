@@ -31,7 +31,8 @@ header-includes:
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE,
-                      error = FALSE)
+                      error = FALSE,
+                      message = FALSE)
 ```
 ## Contents 
  - [Introduction](#introduction) 
@@ -110,13 +111,11 @@ markers_all <- FindAllMarkers(
   logfc.threshold = 0.25 # Minimum log fold change of 0.25 compared to other cells 
 )
 
-# Create an object with the top markers per cluster to be used in a heatmap
+# Use the output of FindAllMarkers to create an object with the top markers per cluster to be used in a heatmap
 top_markers <- markers_all %>%
   group_by(cluster) %>%
-  slice_max(order_by = avg_log2FC, n = 10) %>%
-  ungroup()
-
-top_markers
+  slice_max(order_by = avg_log2FC, n = 10) %>% # Rank the markers so the top 10 markers with highest Log fold change are used
+  ungroup() # Ungroup to make sure the object behaves as it should in further analysis
 ```
 
 ## Marker plots
@@ -124,9 +123,10 @@ top_markers
 ### Heatmap of top markers
 
 ```{r Heatmap_top_markers, fig.height=8, fig.width=8}
-top5 <- markers_all %>%
+# Create a vector of the gene IDs per cluster to be used in a heatmap
+top5 <- markers_all %>% 
   group_by(cluster) %>%
-  slice_max(order_by = avg_log2FC, n = 5) %>%
+  slice_max(order_by = avg_log2FC, n = 5) %>% # Rank the markers so the top 5 markers with highest Log fold change are used
   pull(gene) %>%
   unique()
 

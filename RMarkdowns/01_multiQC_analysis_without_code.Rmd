@@ -101,7 +101,7 @@ The html report will automatically be saved to the output folder that was specif
 In figure 1 an example is shown of the plot that is generated for the per base quality score. On the x-axis the position of the base in the read and on the y-axis the quality score is shown. The colours on the background of the plot are an indication of the quality, with green being a very reliable quality, orange is of less reliable quality and red being of poor quality. The blue line in this plot is the mean quality for each position in the read. In this figure we can also see that a boxplot is generated, with the yellow boxes being the interquartile range (25th to 75th percentile) for that position in the read, and the outer black lines indicate the 10th and 90th percentile.
 \FloatBarrier
 ```{r include_fastqc_plot1, echo=FALSE, out.width="80%", fig.cap="Per base quality score. This figure shows the per base quality score of the data of accession number SRR10278813. This plot was generated with the fast QC package."}
-knitr::include_graphics("~/ad_transcriptomics_dge/analyses/fastqc/SRR10278813_perbase_quality.png")
+knitr::include_graphics("~/ad_transcriptomics_dge/figures/SRR10278813_perbase_quality.png")
 ```
 \FloatBarrier
 
@@ -109,7 +109,7 @@ In figure 2 an example is shown of the plot that is generated for the per sequen
 
 \FloatBarrier
 ```{r include_fastqc_plot2, echo=FALSE, out.width="80%", fig.cap="Per sequence quality score. This figure shows the per sequence quality score of the data of accession number SRR10278813. This plot was generated with the fast QC package."}
-knitr::include_graphics("~/ad_transcriptomics_dge/analyses/fastqc/SRR10278813_persequence_qscores.png")
+knitr::include_graphics("~/ad_transcriptomics_dge/figures/SRR10278813_persequence_qscores.png")
 ```
 \FloatBarrier
 
@@ -125,9 +125,15 @@ Figure 3 shows the plot for per-base quality scores. Unlike the FastQC output, t
 
 \FloatBarrier
 ```{r include_multiqc_plot1, echo=FALSE, out.width="80%", fig.cap="Per base quality score. This figure shows the per base quality score of all of the data from GSE138852. This plot was generated with the  multiQC package."}
-knitr::include_graphics("~/ad_transcriptomics_dge/analyses/fastqc/fastqc_per_base_sequence_quality_plot.png")
+knitr::include_graphics("~/ad_transcriptomics_dge/figures/fastqc_per_base_sequence_quality_plot.png")
 ```
 \FloatBarrier
+\FloatBarrier
+```{r include_multiqc_gc_content, echo=FALSE, out.width="80%", fig.cap="MultiQC plot of per sequence GC content. This figure shows the per GC content of all of the data from GSE138852. This plot was generated with the  multiQC package."}
+knitr::include_graphics("~/ad_transcriptomics_dge/figures/fastqc_per_sequence_gc_content_plot.png")
+```
+\FloatBarrier
+
 
 ## Conclusion
 For all the samples the average Phred scores remain above acceptable thresholds (Q>30), at the end of the reads a slight incline is observed, however this is expected when sequencing with Illumina. Based on the average Phred scores it can be concluded that basecalling is performd with high accuracy. 
