@@ -26,8 +26,10 @@ header-includes:
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = FALSE,
-                      fig.pos = "H")
+knitr::opts_chunk$set(echo = TRUE,
+                      fig.pos = "H",
+                      warning = FALSE,
+                      message = FALSE)
 
 ```
 
@@ -89,7 +91,7 @@ bash 06_download_countmatrix.sh
 ### Loading the dataset and creating a Seurat object
 The count matrix was stored in a comma separated values file (.csv-file). To be able to use this file for creating a Seurat object ```read.csv()``` was used to create a data.frame first. Then the data.frame was used as input for the function ```CreateSeuratObject()```. 
 
-```{r Load_data_set, include=FALSE, echo=FALSE}
+```{r Load_data_set, include=FALSE}
 # Load the GSE138852 countmatrix as a data.frame
 count_matrix <- read.csv(file = here("raw_data", "GSE138852_counts.csv"),
   row.names = 1,
@@ -102,7 +104,7 @@ count_matrix <- CreateSeuratObject(counts = count_matrix, project = "GSE138852")
 \newpage
 
 ### Pre-processing of the dataset
-Since the count matrix had already been pre-processed as described in "[About the count matrix](#About-the-count-matrix)", initially no additional pre-processing is performed in order to check if the dataset was indeed pre-processed as stated in the article by Grubman _et al_. A column was added containing the percentage of mitochondrial features. A violin plot was generated and visualized in figure 1. 
+Since the count matrix had already been pre-processed as described in "[About the count matrix](#About-the-count-matrix)", initially no additional pre-processing is performed in order to check if the dataset was indeed pre-processed as stated in the article by Grubman _et al_ [(1)](#sources). A column was added containing the percentage of mitochondrial features. A violin plot was generated and visualized in figure 1. 
 After inspecting the unfiltered data in figure 1 quality-control filtering was applied to retain only nuclei with ≤5% mitochondrial RNA and ≥300 detected genes. The dataset was visualized in a violin plot after filtering in figure 2. To verify the quality of the dataset a scatterplot was created of nCount_RNA vs Percent_mt and nCount_RNA vs nFeature_RNA (figure 3). Here it is shown that cells with a lower RNA count show a higher percentage of mitochondrial RNA and that cells that show a high amount of RNA counts also show a higher amount of unique genes.
 
 ```{r Preprocessing_of_data_set}
@@ -110,23 +112,23 @@ After inspecting the unfiltered data in figure 1 quality-control filtering was a
 count_matrix[["Percent_mt"]] <- PercentageFeatureSet(count_matrix, pattern = "^MT-")
 ```
 
-```{r Visualize_dataframe_without_filters, echo=FALSE, warning=FALSE, message=FALSE, fig.cap="Violin plots of quality-control metrics. Shown are the number of detected genes per nucleus (nFeature_RNA), total UMI counts per nucleus (nCount_RNA), and the percentage of mitochondrial gene expression (Percent_mt). The distributions of these plots are as expected with prior quality-control filtering as described by Grubman et al.", fig.pos='!htbp'}
+```{r Visualize_dataframe_without_filters, fig.cap="Violin plots of quality-control metrics. Shown are the number of detected genes per nucleus (nFeature_RNA), total UMI counts per nucleus (nCount_RNA), and the percentage of mitochondrial gene expression (Percent_mt). The distributions of these plots are as expected with prior quality-control filtering as described by Grubman et al.", fig.pos='!htbp'}
 # Visualize dataframe as a violin plot
 VlnPlot(count_matrix, features = c("nFeature_RNA", "nCount_RNA", "Percent_mt"), ncol = 3)+ 
   NoLegend()
 ```
 
-```{r Adjust_filtering_of_data_set, echo=FALSE}
+```{r Adjust_filtering_of_data_set}
 count_matrix <- subset(count_matrix, subset = nFeature_RNA > 300 & Percent_mt < 5)
 ```
 
-```{r Visualize_dataframe, echo=FALSE, warning=FALSE, message=FALSE, fig.cap="Violin plots of quality-control metrics. Shown are the number of detected genes per nucleus (nFeature_RNA), total UMI counts per nucleus (nCount_RNA), and the percentage of mitochondrial gene expression (Percent_mt). Nuclei were retained for downstream analyses if nFeature_RNA was at least 300 detected genes and percentage mitochondrial RNA was no more then 5%, filtering out low-quality nuclei.", fig.pos='!htbp'}
+```{r Visualize_dataframe, fig.cap="Violin plots of quality-control metrics. Shown are the number of detected genes per nucleus (nFeature_RNA), total UMI counts per nucleus (nCount_RNA), and the percentage of mitochondrial gene expression (Percent_mt). Nuclei were retained for downstream analyses if nFeature_RNA was at least 300 detected genes and percentage mitochondrial RNA was no more then 5%, filtering out low-quality nuclei.", fig.pos='!htbp'}
 # Visualize dataframe as a violin plot
 VlnPlot(count_matrix, features = c("nFeature_RNA", "nCount_RNA", "Percent_mt"), ncol = 3)+ 
   NoLegend()
 ```
 
-```{r Visualize_dataframe_as_scatterplot, echo=FALSE, warning =FALSE, fig.cap="Scatterplot to visualise a relationship between the percentage of mitochondrial RNA versus the total amount of RNA and to visualize the relationship between the total amount of features and the total amount of RNA", fig.pos='!htbp'}
+```{r Visualize_dataframe_as_scatterplot, fig.cap="Scatterplot to visualise a relationship between the percentage of mitochondrial RNA versus the total amount of RNA and to visualize the relationship between the total amount of features and the total amount of RNA", fig.pos='!htbp'}
 
 # Visualize dataframe in scatterplots
 plot1 <- FeatureScatter(count_matrix,
@@ -157,7 +159,7 @@ ___
 ### Normalization of the dataset
 The count matrix was normalized using ```NormalizeData()```. For normalization the default settings of Seurat were used which means that the argument ```LogNormalize``` was used. With this argument feature counts per cell are divided by the total counts and multiplied by the ```scale.factor```. The default setting for ```scale.factor``` is 10.000.
 
-```{r Normalize_data, include=FALSE, warning=FALSE, echo=FALSE, message=FALSE,}
+```{r Normalize_data, include=FALSE}
 # To normalize the data count_matrix is replaced by a new object for count_matrix in which the data is normalized by using NormalizeData with the default settings LogNormalize and scale.factor=10000.
 count_matrix <- NormalizeData(count_matrix) 
 ```
@@ -165,7 +167,7 @@ count_matrix <- NormalizeData(count_matrix)
 ### Identification of highly variable features
 After normalizing the dataset ```FindVariableFeatures()``` was used to detect the most variable features. The selection method that was used is ```vst```, and ```nFeatures``` was set at 2000. A scatter plot of the output of ```FindVariableFeatures()``` generated and visualized in figure 4. 
 
-```{r Find_variable_features, echo=FALSE, warning=FALSE, message=FALSE, fig.cap="Scatterplot of highly variable features in the GSE138852 count matrix. Average gene expression is plotted on the x-axis against standardized variance on the y-axis. Highly variable genes (red dots) were selected for further analysis. The top 20 most variable genes were labeled.", fig.pos='!htbp', fig.height=6}
+```{r Find_variable_features, fig.cap="Scatterplot of highly variable features in the GSE138852 count matrix. Average gene expression is plotted on the x-axis against standardized variance on the y-axis. Highly variable genes (red dots) were selected for further analysis. The top 20 most variable genes were labeled.", fig.pos='!htbp', fig.height=6}
 # Find variable features 
 count_matrix <- FindVariableFeatures(count_matrix, selection.method = "vst", nfeatures = 2000)
 # Identify the 20 most highly variable genes
@@ -190,13 +192,12 @@ plot1 <- VariableFeaturePlot(count_matrix) %>%
 plot1
 ```
 
-\newpage 
 
 ## Dimension reduction with Principal Component Analysis
 ### Data scaling
 To prepare the dataset for Principal Component Analysis (PCA), scaling was performed with ```ScaleData```. 
 
-```{r Scaling_data, warning=FALSE, message=FALSE, echo=FALSE}
+```{r Scaling_data}
 # Scale the data of the count matrix 
 count_matrix <- ScaleData(count_matrix)
 ```
@@ -204,20 +205,20 @@ count_matrix <- ScaleData(count_matrix)
 ### Linear Dimension Reduction
 The scaled data is used as input for Principal Component Analysis (PCA). PCA is performed with the function ```RunPCA()```, within this function "```npcs```" was kept at 50 which is the default setting to determine how many PCs should be computed.
 
-```{r Run_PCA, warning=FALSE, message=FALSE, echo=FALSE}
+```{r Run_PCA}
 # Run PCA with RunPCA() on the count_matrix
 count_matrix <- RunPCA(count_matrix, features = VariableFeatures(object = count_matrix))
 ```
 After running PCA the first 20 PCs were visualized in an elbow plot (figure 5) with the standard deviation on the y-axis and the different PCs in ranked order on the x-axis. This plot was used to determine how many PCs should be retained for further analysis by identifying the elbow. The elbow is the point where the decrease in standard deviation between PCs is minimizing. Beyond this point, remaining variation is more likely to be caused by noise rather than biologically meaningful variance. In figure 5 the elbow was located around PC8, to be certain that no biologically meaningful variance was lost PC1 throughout PC9 for further analysis. 
 
-```{r Elbowplot_PCA1, warning=FALSE, echo=FALSE, message=FALSE, fig.height=3, fig.cap="Elbow plot of principal components. This plot shows the standard deviation of each principal component. Around PC8 an elbow is observed after PC8, nFeatures = 2000."}
+```{r Elbowplot_PCA, fig.height=3, fig.cap="Elbow plot of principal components. This plot shows the standard deviation of each principal component. Around PC8 an elbow is observed after PC8, nFeatures = 2000."}
 # Create an elbowplot of count_matrix after PCA
 ElbowPlot(count_matrix)
 ```
 
-To visualize which genes contribute to the different principal components, PCA loading plots were generated for PC1 through PC3 (Figure 6). These plots highlight the genes with the strongest contributions to each component. This way the source of variation within a PC can be interpreted. By comparing the top-loading genes with known marker genes for brain tissue specific cells it was assessed whether the variation in each principal is biologically meaningful. For example in PC1 and PC2 the top-loading genes where mainly found to be synaptic genes which could be found in neurones, such as  NRXN1 [2](#sources) and SCN1A [3](#sources). While PC3 is dominated by immune (microglial) genes such as HLA-DRA, CD86 and PTPRC [4](#sources). 
+To visualize which genes contribute to the different principal components, PCA loading plots were generated for PC1 through PC3 (Figure 6). These plots highlight the genes with the strongest contributions to each component. This way the source of variation within a PC can be interpreted. By comparing the top-loading genes with known marker genes for brain tissue specific cells it was assessed whether the variation in each principal is biologically meaningful. For example in PC1 and PC2 the top-loading genes where mainly found to be synaptic genes which could be found in neurones, such as  NRXN1 [(2)](#sources) and SCN1A [(3)](#sources). While PC3 is dominated by immune (microglial) genes such as HLA-DRA, CD86 and PTPRC [(4)](#sources). 
 
-```{r Plot_PCA1, warning=FALSE, echo=FALSE, message=FALSE, fig.height=10, fig.width=7, fig.cap="Principal component loading plot showing the top contributing genes for PC1–PC3, based on 2000 highly variable genes derived from the filtered snRNA-seq expression matrix."}
+```{r Plot_PCA1, fig.height=10, fig.width=7, fig.cap="Principal component loading plot showing the top contributing genes for PC1–PC3, based on 2000 highly variable genes derived from the filtered snRNA-seq expression matrix."}
 # Visualize PC1 through PC3 in a PC feature loading plot for count_matrix
 VizDimLoadings(count_matrix, dims = 1:3, reduction = "pca")
 ``` 
@@ -230,7 +231,7 @@ VizDimLoadings(count_matrix, dims = 1:3, reduction = "pca")
 After PCA the data was reduced to 9 principal components, these components were used as input for clustering. Clustering was done with ```FindNeighbours()```, the dimensions were set at 1:9 and ```k.param``` was kept at the default value of 20 since lower values (k.param=10) caused the clusters scatter more and higher values (k.param=30) didn't seem to improve the data. 
 The output of ```FindNeighbours()``` was used as input for ```RunUMAP``` and for ```FindClusters()```. ```FindClusters()``` was used to verify which cells have a expression pattern more similar to each other and was eventually used to see to which cell type the different cells belong. The clustering resolution was tested at multiple values (0.5, 0.7, and 1.0) in order to determine the resolution that produced the most stable clusters without losing the specificity to annotate cell types downstream in analysis. The clusters with the different resolutions were shown in three UMAP plots in figure 7, figure 8 and figure 9.
 
-```{r Plot_UMAP1, echo=FALSE, warning=FALSE, message=FALSE, fig.height=5, fig.width=6, fig.cap= "UMAP visualization of GSE138852. Cells are visualized in two-dimensional UMAP space using the first 9PCs. Each point represents a single nucleus, coloured by cluster assignment identified at resolution 0.5."}
+```{r Plot_UMAP1, fig.height=5, fig.width=6, fig.cap= "UMAP visualization of GSE138852. Cells are visualized in two-dimensional UMAP space using the first 9PCs. Each point represents a single nucleus, coloured by cluster assignment identified at resolution 0.5."}
 # FindNeighbours of PC1-9, with k.param = 20.
 count_matrix <- FindNeighbors(count_matrix, dims = 1:9)
 # RunUMAP with input of find neighbours and PCA to determine coordinates of all cells in UMAP space
@@ -243,12 +244,12 @@ count_matrix3 <- FindClusters(count_matrix, resolution = 1.0, verbose=FALSE)
 DimPlot(count_matrix1, reduction = "umap")
 ```
 
-```{r Plot_UMAP2, warning=FALSE, message=FALSE, fig.height=5, fig.width=6, fig.cap= "UMAP visualization of GSE138852. Cells are visualized in two-dimensional UMAP space using the first 9PCs. Each point represents a single nucleus, coloured by cluster assignment identified at resolution 0.7."}
+```{r Plot_UMAP2, fig.height=5, fig.width=6, fig.cap= "UMAP visualization of GSE138852. Cells are visualized in two-dimensional UMAP space using the first 9PCs. Each point represents a single nucleus, coloured by cluster assignment identified at resolution 0.7."}
 # Plot the UMAP of res 0.7
 DimPlot(count_matrix2, reduction = "umap")
 ```
 
-```{r Plot_UMAP3, warning=FALSE, message=FALSE, fig.height=5, fig.width=6, fig.cap= "UMAP visualization of GSE138852. Cells are visualized in two-dimensional UMAP space using the first 9PCs. Each point represents a single nucleus, coloured by cluster assignment identified at resolution 1.0."}
+```{r Plot_UMAP3, fig.height=5, fig.width=6, fig.cap= "UMAP visualization of GSE138852. Cells are visualized in two-dimensional UMAP space using the first 9PCs. Each point represents a single nucleus, coloured by cluster assignment identified at resolution 1.0."}
 # Plot the UMAP of res 1.0
 DimPlot(count_matrix3, reduction = "umap")
 ```
@@ -281,7 +282,7 @@ The different settings that were used such as nFeatures, number of PCs and setti
 ### Save the Seurat object as RDS
 After analysis the Seurat object with the correct parameters was saved as .RDS file. The resolution of the object was stored in the title.
 
-```{r Save_seurat_object_to_RDS, echo=FALSE, warning=FALSE}
+```{r Save_seurat_object_to_RDS, message=TRUE}
 # Create the output directory with here, show no warnings if directory allready exists
 dir.create(here("analyses","seurat"), showWarnings = FALSE)
 
