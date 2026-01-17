@@ -23,7 +23,8 @@ header-includes:
   - \DefineVerbatimEnvironment{Highlighting}{Verbatim}{fontsize=\footnotesize,commandchars=\\\{\}}
 ---
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = TRUE,
+                      eval = FALSE)
 ```
 ## Content
  - [Introduction](#introduction)
@@ -45,12 +46,12 @@ Do the sequencing reads have a high enough Q-score to further analyse the data (
 ## Packages and Requirements
 In order to run the scripts for QC-analysis a few packages need to be installed first, for analysis an environment was created in miniconda with the command line prompt;
 
-```{bash create conda env, eval = FALSE}
+```{bash create conda env}
 conda create -n snrnaseq
 ```
 
 The conda environment was activated with the prompt
-```{bash activate conda env, eval = FALSE}
+```{bash activate conda env}
 conda activate snrnaseq
 ```
 
@@ -61,7 +62,7 @@ Install the required packages in the conda environment. For obtaining the fastq-
  - ```multiqc```
  
 Run the following commands in the terminal to install the packages:
-```{bash install sra-tools, eval = FALSE}
+```{bash install sra-tools}
 conda install bioconda::sra-tools
 conda install bioconda::fastqc
 conda install bioconda::multiqc
@@ -72,16 +73,21 @@ After creating an output directory the script uses the _SRR_Acc_List.txt_ and re
 
 The script takes a long time since the downloads are quite large, therefore it is recommended to add ```nohup``` and ```&``` to the command line to run the script on the background of the terminal.
 Navigate to the scripts folder and run this script from the terminal with the following command:
-```{bash run script 01_download_SRR_fastq.sh, eval = FALSE}
+```{bash run script_01_download_SRR_fastq.sh}
 nohup bash 01_download_SRR_fastq.sh &
 ```
 
-```{bash script_01_downloadSRR_fastq.sh, eval=FALSE}
+**Script 01_download_SRR_fastq.sh**
+```{bash script_01_download_SRR_fastq.sh}
 #!/bin/bash
 # Script to download .fastq-files from a list with SRR ID's with fasterq-dump
 
 # Install packages 
 # conda install bioconda::sra-tools
+
+# Activate conda environment
+source ~/miniconda3/etc/profile.d/conda.sh
+conda activate snrnaseq
 
 # Stop when errors occur
 set -euo pipefail
@@ -90,6 +96,12 @@ set -euo pipefail
 project="$HOME/ad_transcriptomics_dge"
 SRR_list="$project/raw_data/SRR_Acc_List.txt" 
 output="$project/raw_data/fastq_data"
+
+if ! command -v fastq-dump >/dev/null 2>&1; then
+  echo "'fastq-dump' was not found." >&2
+  echo "Please install sratoolkit." >&2
+  exit 1
+fi
 
 # Create output directory
 mkdir -p "$output"
@@ -119,11 +131,12 @@ Analysis of the fastq files is done using a script (```02_fastqc.sh```) that ana
  
 To run this script it is recommended to add ```nohup``` and ```&``` to the command line since there are quite a lot of files to analyse.
 Navigate to the scripts folder and run this script from the terminal with the following command:
-```{bash run script 02_fastqc.sh, eval = FALSE}
+```{bash run_script 02_fastqc.sh}
 nohup bash 02_fastqc.sh &
 ```
 
-```{bash script_02_fastqc.sh, eval=FALSE}
+**Script 02_fastqc.sh**
+```{bash script 02_fastqc.sh}
 #!/bin/bash
 # This script performs QC control on .fastq files
 
@@ -136,6 +149,13 @@ conda activate snrnaseq
 
 # Install packages
 # conda install bioconda::fastqc
+
+# Check if fastqc is available, if fastqc is not available then print error message and stop the script.
+if ! command -v fastqc >/dev/null 2>&1; then
+  echo "fastqc not found." >&2
+  echo "Please install FastQC (version 0.12 or higher)." >&2
+  exit 1
+fi
 
 # Path to directories
 project="$HOME/ad_transcriptomics_dge"
@@ -158,55 +178,66 @@ done
 echo "FastQC analysis completed."
 ```
 
-
 The html report will automatically be saved to the output folder that was specified in the script, two examples of the plots that were analysed were visualized in figure 1 and figure 2.
 
 In figure 1 an example is shown of the plot that is generated for the per base quality score. On the x-axis the position of the base in the read and on the y-axis the quality score is shown. The colours on the background of the plot are an indication of the quality, with green being a very reliable quality, orange is of less reliable quality and red being of poor quality. The blue line in this plot is the mean quality for each position in the read. In this figure we can also see that a boxplot is generated, with the yellow boxes being the interquartile range (25th to 75th percentile) for that position in the read, and the outer black lines indicate the 10th and 90th percentile.
 \FloatBarrier
-```{r include_fastqc_plot1, echo=FALSE, out.width="80%", fig.cap="Per base quality score. This figure shows the per base quality score of the data of accession number SRR10278813. This plot was generated with the fast QC package."}
-knitr::include_graphics("~/ad_transcriptomics_dge/analyses/fastqc/SRR10278813_perbase_quality.png")
+```{r include_fastqc_plot1, echo=FALSE, eval=TRUE, out.width="80%", fig.cap="Per base quality score. This figure shows the per base quality score of the data of accession number SRR10278813. This plot was generated with the fast QC package."}
+knitr::include_graphics("~/ad_transcriptomics_dge/figures/SRR10278813_perbase_quality.png")
 ```
 \FloatBarrier
 
 In figure 2 an example is shown of the plot that is generated for the per sequence quality score. On the x-axis the mean quality score is shown and on the y-axis the number of sequences with that quality score. If most of the sequences in this plot have a high quality score it usually means that the sequencing run is successful. 
 
 \FloatBarrier
-```{r include_fastqc_plot2, echo=FALSE, out.width="80%", fig.cap="Per sequence quality score. This figure shows the per sequence quality score of the data of accession number SRR10278813. This plot was generated with the fast QC package."}
-knitr::include_graphics("~/ad_transcriptomics_dge/analyses/fastqc/SRR10278813_persequence_qscores.png")
+```{r include_fastqc_plot2, echo=FALSE, eval=TRUE, out.width="80%", fig.cap="Per sequence quality score. This figure shows the per sequence quality score of the data of accession number SRR10278813. This plot was generated with the fast QC package."}
+knitr::include_graphics("~/ad_transcriptomics_dge/figures/SRR10278813_persequence_qscores.png")
 ```
 \FloatBarrier
 
 ## Analysis with MultiQC
 The analysis of all the plots generated in [analysis with FastQC](#analysis-with-fastqc) is quite time-consuming. To simplify the process and enable the evaluation of all samples simultaneously, the package MultiQC was used. By using MultiQC it is no longer necessary to inspect each FastQC report individually, since the tool bundles all FastQC outputs into a single interactive report. No script was required for MultiQC; after installation it can be run directly from the command line. To perform a MultiQC analysis, it is important to first navigate to the directory containing the FastQC reports, as MultiQC uses these files as its input.
 
-```{bash run multiQC from command line, eval = FALSE}
+```{bash run multiQC from command line}
 cd path/to/fastqc_reports
 multiqc .
 ```
 After running MultiQC, a report is generated in the directory where the analysis was performed. This report contains the same plots that a FastQC report produces; however, a MultiQC report provides interactive plots in which all input samples are layered on top of one another, making it easier to compare data across runs and samples.
-Figure 3 shows the plot for per-base quality scores. Unlike the FastQC output, this version does not include boxplots; instead, each line represents a different accession number. In the HTML version of the MultiQC report, the plot is interactive—when hovering over a line, the corresponding accession number, read position, and mean Phred score are displayed.
+Figure 3 shows the plot for per-base quality scores of all samples. Unlike the FastQC output, this version does not include boxplots; instead, each line represents a different accession number. In the HTML version of the MultiQC report, the plot is interactive. When hovering over a line, the corresponding accession number, read position, and mean Phred score are displayed. 
+In figure 3 it is shown that the mean quality score of 24 of the samples (SRR10278808 through SRR10278831) are of well above Q30 up until 140 bp, these samples are shown in green and are of sufficient quality. For samples SRR10278832 through SRR10278839 it is observed that the mean quality towards the end of the sequence starts to decline (at 120 bp the mean quality is below Q30), the yellow lines indicate that there are potential issues regarding the quality of these reads. For samples SRR10278832 through SRR10278839 the amount of reads is almost three times higher then the rest of the dataset. 
+Figure 4 shows the plot for GC content per sequence, on the x-axis the percentage of cytosine or guanine bases is shown and on the y-axis the percentage of reads is shown with that percentage of GC-content. In figure 4 it is observed that most sequences have a GC-content around 40%, the plot also shows a smal shoulder around 80% for all of the samples.
+
 
 \FloatBarrier
-```{r include_multiqc_plot1, echo=FALSE, out.width="80%", fig.cap="Per base quality score. This figure shows the per base quality score of all of the data from GSE138852. This plot was generated with the  multiQC package."}
-knitr::include_graphics("~/ad_transcriptomics_dge/analyses/fastqc/fastqc_per_base_sequence_quality_plot.png")
+```{r include_multiqc_plot1,, eval=TRUE, echo=FALSE, out.width="80%", fig.cap="Per base quality score. This figure shows the per base quality score of all of the data from GSE138852. This plot was generated with the  multiQC package."}
+knitr::include_graphics("~/ad_transcriptomics_dge/figures/fastqc_per_base_sequence_quality_plot.png")
+```
+\FloatBarrier
+```{r include_multiqc_gc_content, eval=TRUE, echo=FALSE, out.width="80%", fig.cap="MultiQC plot of per sequence GC content. This figure shows the per GC content of all of the data from GSE138852. This plot was generated with the  multiQC package."}
+knitr::include_graphics("~/ad_transcriptomics_dge/figures/fastqc_per_sequence_gc_content_plot.png")
 ```
 \FloatBarrier
 
+
 ## Conclusion
-For all the samples the average Phred scores remain above acceptable thresholds (Q>30), at the end of the reads a slight incline is observed, however this is expected when sequencing with Illumina. Based on the average Phred scores it can be concluded that basecalling is performd with high accuracy. 
+For all the samples the average Phred scores remain above acceptable thresholds (Q>30), at the end of the reads a slight incline is observed, however this is expected when sequencing with Illumina. Based on the average Phred scores it can be concluded that basecalling is performed with high accuracy. 
 
 When looking at the Per Sequence Quality Scores, it can be observed that the curve for the average Q-score of individual reads shows a peak in the green section of the plot (Q>30). This indicates that the majority of the reads are of very good quality and that the dataset appears to be reliable based on this information.
 
-The plot for GC content shows a peak as expected around 41% since human DNA has a GC content about 41% [1](https://www.chg.ox.ac.uk/~gav/projects/oxford_statgen_summer_school/website/next_generation_sequencing/basic_sequence_data_analysis/Quality_control/#:~:text=Per%2Dsequence%20GC%20content%E2%80%8B,and%20over%2Drepresented%20sequences%E2%80%8B). There is a small shoulder in the peak at around 80%. 
+The plot for GC content shows a peak as expected around 41% since human DNA has a GC content about 41% [(1)](#sources) [(2)](#sources). There is a small shoulder in the peak at around 80%. 
 
-The overal conclusion is that the data can be used for further processing, the quality of sequencing runs looks good with an average Q-score of >30. The GC-content is as is expected for the organism and the drop in quality at the end of the reads is a known pattern for illumina.
+The overall conclusion is that the data can be used for further processing, the quality of sequencing runs looks good with an average Q-score of >30. The GC-content is as is expected for the organism and the drop in quality at the end of the reads is a known pattern for illumina.
 
 ## Discussion
-In general all the average Phred-scores of the different samples are of high quality, however at the end of each read the quality starts to go down. In order to only use reads with Q>30, the end of the reads could be trimmed. Another option is to completely filter out everything with Q<30. Since the profile of the plot is typical for Illumina, the choice was made to keep the data as is for now. Also filtering out data could potentially reduce the resolution of the dataset.
+In general all the average Phred-scores of the different samples are of high quality, however at the end of each read the quality starts to go down. In order to only use reads with Q>30, the end of the reads could be trimmed (for example the last 10 bp). Another option is to completely filter out everything with Q<30. Since the profile of the plot is typical for Illumina and the count matrix was used for downstream analysis instead of the fastq-files (see [README.md](https://github.com/ProjecticumDlerpDs/ad_transcriptomics_dge/blob/main/README.md) for further explanation regarding the count matrix), the choice was made to keep the data as is for now. If the data would have been used as input for downstream analysis an additional trimming step would have been performed in order to discard low quality bases. For example by trimming the final 20 - 30 pb off the sequences or by removing low quality reads entirely with a tool like ```fastp```. 
 
-The plot for GC-content showed a small shoulder at 80%, this could be a small contamination but since the shoulder shows at the same point in all the samples this seems unlikely. It might also be that there are some GC-rich genomic regions or repetitive elements present [2](chrome-extension://efaidnbmnnnibpcajpcglclefindmkaj/http://130.239.72.131:3000/materials/materials/Guidelines-for-RNA-Seq-data-analysis.pdf).
+The plot for GC-content showed a small shoulder at 80%, this could be a small contamination but since the shoulder shows at the same point in all the samples this seems unlikely. It might also be that there are some GC-rich genomic regions or repetitive elements present, or that rRNA was present in the sample. [(3)](#sources).
 
+## Sources
 
+ - (1):[Oxford statistical genomics summer school](https://www.chg.ox.ac.uk/~gav/projects/oxford_statgen_summer_school/website/next_generation_sequencing/basic_sequence_data_analysis/Quality_control/#:~:text=Per%2Dsequence%20GC%20content%E2%80%8B,and%20over%2Drepresented%20sequences%E2%80%8B)  
+ - (2):[Piovesan, A., Pelleri, M.C., Antonaros, F. et al. On the length, weight and GC content of the human genome. BMC Res Notes 12, 106 (2019). https://doi.org/10.1186/s13104-019-4137-z](https://link.springer.com/article/10.1186/s13104-019-4137-z)
+ - (3):[Epigenesys, guidelines for RNA-Seq data analysis, Nicolas Delhomme, Niklas Mähler, Bastian Schiffthaler, David Sundell1 Chanaka Mannapperuma, Torgeir R. Hvidsten, Nathaniel R. Street](chrome-extension://efaidnbmnnnibpcajpcglclefindmkaj/http://130.239.72.131:3000/materials/materials/Guidelines-for-RNA-Seq-data-analysis.pdf)
 
 
 
