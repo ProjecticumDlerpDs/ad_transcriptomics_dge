@@ -311,7 +311,7 @@ dir.create(here("analyses","seurat"), showWarnings = FALSE)
 output_dir <- here("analyses", "seurat")
 
 # Define output file
-output_file <- here(output_dir, "seurat_umap_clustering_res0.7.rds")
+output_file <- file.path(output_dir, "seurat_umap_clustering_res0.7.rds")
 
 # Save the Seurat object after analysis as RDS object to be available for further analysis
 saveRDS(
