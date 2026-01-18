@@ -55,7 +55,7 @@ How can a reliable and reproducible analysis pipeline be established to identify
 
 **Workflow**
 
-![Figure 1: Workflow for differential gene expression analysis of single-nucleus RNA sequencing data in Alzheimers Disease](figures/Workflow.png)
+![Figure 1: Workflow for differential gene expression analysis of single-nucleus RNA sequencing data in Alzheimers Disease](figures/Flowchart_ad_transcriptomics_dge.png)
 
 ___
 

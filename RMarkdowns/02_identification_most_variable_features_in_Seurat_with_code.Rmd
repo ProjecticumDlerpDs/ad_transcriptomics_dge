@@ -84,8 +84,29 @@ The count matrix was downloaded from the GEO-database. The count matrix is a tab
  - Only cells that are within the 5th - 95th percentile regarding gene and UMI count. 
 
 Navigate to the directory *ad_transcriptomics/scripts* and run the script for downloading the count matrix from the terminal with the following command:
-```{bash run script 06_download_countmatrix.sh, eval = FALSE, echo = TRUE}
+```{bash run_script_06_download_countmatrix.sh, eval = FALSE, echo = TRUE}
 bash 06_download_countmatrix.sh
+```
+
+**Script 06_download_countmatrix.sh**
+```{bash script_06_download_countmatrix.sh, eval = FALSE, echo = TRUE}
+#!/bin/bash
+# Script to download countmatrix from GEO-database
+
+# Stop when errors occur
+set -euo pipefail
+
+# Path to directories 
+project="$HOME/ad_transcriptomics_dge"
+output="$project/raw_data"
+
+# Create output directory
+mkdir -p $output
+
+# Download countmatrix from 
+wget -P $output https://ftp.ncbi.nlm.nih.gov/geo/series/GSE138nnn/GSE138852/suppl/GSE138852_counts.csv.gz
+
+echo "The count matrix is saved in: $output"
 ```
 
 ### Loading the dataset and creating a Seurat object
