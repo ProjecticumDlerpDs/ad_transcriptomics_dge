@@ -159,7 +159,7 @@ dotplot_markers <- c(
   "AQP4","GFAP","ALDH1L1",           # astrocytes
   "MBP","PLP1","MOG",                # oligodendrocytes
   "PDGFRA","VCAN",                   # OPC
-  "C1QA", "C1QB", "CD74", "CSF1R"   # microglia
+  "C1QA", "C1QB", "CD74", "CSF1R"    # microglia
 )
 
 dotplot_markers_present <- dotplot_markers[dotplot_markers %in% rownames(seurat_obj)]
@@ -195,7 +195,7 @@ ct_res <- BRETIGEA::findCells(
   markers  = markers,
   nMarker  = 20,
   method   = "PCA",
-  scale    = FALSE
+  scale    = FALSE,
 )
 ```
 
@@ -223,7 +223,7 @@ celltype_by_cell <- unname(cluster_to_celltype[clusters])
 celltype_by_cell[is.na(celltype_by_cell)] <- "Unknown"
 names(celltype_by_cell) <- colnames(seurat_obj)
 
-# Store BRETIGEA call as a metadata column
+# Store BRETIGEA annotation as a metadata column in the seurat object
 seurat_obj <- AddMetaData(seurat_obj, celltype_by_cell, col.name = "BRETIGEA_celltype")
 
 
