@@ -14,6 +14,7 @@ mkdir -p $output
 # Download countmatrix from 
 wget -P $output https://ftp.ncbi.nlm.nih.gov/geo/series/GSE138nnn/GSE138852/suppl/GSE138852_counts.csv.gz
 
+# Decompress zipped file to be used in Seurat pipeline
 gzip -d $output/GSE138852_counts.csv.gz
 
 echo "The count matrix is saved in: $output"

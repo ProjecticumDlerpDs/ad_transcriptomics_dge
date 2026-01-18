@@ -1,5 +1,5 @@
 ---
-title: "Identification most variable features in Seurat"
+title: "Identification of most variable features in Seurat"
 author: "Meryem Stroosma"
 date: "`r Sys.Date()`"
 output: 
@@ -284,13 +284,13 @@ After analysis the Seurat object with the correct parameters was saved as .RDS f
 
 ```{r Save_seurat_object_to_RDS, message = TRUE}
 # Create the output directory with here, show no warnings if directory allready exists
-dir.create(here("analyses","seurat"), showWarnings = FALSE)
+dir.create(here("analyses","seurat"), showWarnings = FALSE, recursive=TRUE)
 
 # Define output directory
 output_dir <- here("analyses", "seurat")
 
 # Define output file
-output_file <- here(output_dir, "seurat_umap_clustering_res0.7.rds")
+output_file <- file.path(output_dir, "seurat_umap_clustering_res0.7.rds")
 
 # Save the Seurat object after analysis as RDS object to be available for further analysis
 saveRDS(

@@ -148,7 +148,7 @@ The plots in figure 1 and figure 2 contain the unfiltered data of the pbmc dataf
  - __nFeature_RNA__: Only cells with 200 - 1500 unique features are shown. This means ```nFeature_RNA``` should be between 200 and 1500 for each cell.
  - __percent_mt__: Only cells that express less then 5 percent mitochondrial genes are shown. This means ```percent_mt``` should be < 5.
 
-The plots of the filtered pbmc dataframe are shown in figure 3 and figure 4.
+The plots of the filtered pbmc dataframe are shown in figure 3.
 
 ```{r Adjust_filtering_of_data_set, echo=FALSE}
 pbmc_filtered <- subset(pbmc, subset = nFeature_RNA > 200 & nFeature_RNA < 1500 & percent_mt < 5)
@@ -159,28 +159,6 @@ pbmc_filtered <- subset(pbmc, subset = nFeature_RNA > 200 & nFeature_RNA < 1500 
 ```{r visualize_filtered_dataframe, echo=FALSE, warning=FALSE, fig.cap="Violin plot of filtered QC-metrics. In the first plot the unique number of genes per cell is visualised, in the second plot the amount of RNA molecules is shown and in the last plot the percentage of mitochondrial genes is shown.", fig.pos='!htbp'} 
 # Visualize dataframe as a violin plot
 VlnPlot(pbmc_filtered, features = c("nFeature_RNA", "nCount_RNA", "percent_mt"), ncol = 3)
-```
-
-```{r Visualize_filtered_dataframe_as_scatterplot, echo=FALSE, warning =FALSE, fig.cap="Scatterplot of filtered data to visualise a relationship between the percentage of mitochondrial RNA versus the total amount of RNA and to visualize the relationship between the total amount of features and the total amount of RNA", fig.pos='!htbp'}
-
-# Visualize dataframe in scatterplots
-plot1 <- FeatureScatter(pbmc_filtered,
-                        feature1 = "nCount_RNA",
-                        feature2 = "percent_mt",
-                        plot.cor = FALSE) +
-  ggtitle("Mitochondrial percentage\nverus RNA counts") +
-  xlab("Total RNA counts") +
-  ylab("Percentage MT genes") +
-  theme_classic()
-plot2 <- FeatureScatter(pbmc_filtered, 
-                        feature1 = "nCount_RNA",
-                        feature2 = "nFeature_RNA",
-                        plot.cor = FALSE) +
-  ggtitle("RNA features\nversus RNA counts") +
-  xlab("Total RNA counts") +
-  ylab("RNA features") +
-  theme_classic()
-plot1 + plot2
 ```
 
 \newpage
@@ -298,8 +276,8 @@ print(pbmc_PCA1[["pca"]], dims = 1:5, nfeatures = 5)
 
 To visualize the PCA Seurat provides several ways to plot the data:
 
- - __Principal component feature loading plot__: This plot shows which genes are contributing the strongest to a PC. On the x-axis of this plot it shows if a gene has a positive or a negative loading. This doesn't say anything about how strongly a gene is expressed, but genes with high positive or negative loadings display opposing gene expression programs. It could mean that the genes with a negative loading are expressed by one particular type of cell, while a different type of cell is expressing the genes with a positive loading. In Seurat this plot is created by ```VisDimLoadings()```. In figure 6 and figure 7 examples are shown.
- - __PCA cell embedding plot__: This plot shows the distribution of cells within PCs. For example PC1 could be on the x-axis and PC2 on the y-axis, the cells are then plotted based on their coordinates for PC1 and PC2. In Seurat ```VizDimLoadings()``` can be used to create this plot. In figure 8 and figure 9 examples are shown.
+ - __Principal component feature loading plot__: This plot shows which genes are contributing the strongest to a PC. On the x-axis of this plot it shows if a gene has a positive or a negative loading. This doesn't say anything about how strongly a gene is expressed, but genes with high positive or negative loadings display opposing gene expression programs. It could mean that the genes with a negative loading are expressed by one particular type of cell, while a different type of cell is expressing the genes with a positive loading. In Seurat this plot is created by ```VisDimLoadings()```. In figure 5 and figure 6 examples are shown.
+ - __PCA cell embedding plot__: This plot shows the distribution of cells within PCs. For example PC1 could be on the x-axis and PC2 on the y-axis, the cells are then plotted based on their coordinates for PC1 and PC2. In Seurat ```VizDimLoadings()``` can be used to create this plot. In figure 7 and figure 8 examples are shown.
  - __PCA Heatmap__: A heatmap shows the top genes contributing to a PC across a population of cells. In Seurat ```DimHeatMap``` can be used to create a heatmap. Several arguments can be used to customize the heatmap, for example to change the amount of dimensions and cells that are plotted. 
  
 \newpage
@@ -403,11 +381,11 @@ In the chunk the output of the function FindMarkers() is shown. The different co
  * __p_val_adj__: This is the adjusted P-value, P-value adjustment is done using bonferroni correction and corrected by dividing the significance level by the total number of genes _(10)_. 
  It is also possible to compare every cluster against all other cells to find markers across the entire dataset, this is done with ```FindAllMarkers()```. 
 
-After identifying differentially expressed markers, the results can be visualized in several ways. In Figure 16, a violin plot is shown for the marker genes NKG7 and S100A8. The x-axis represents the cell identities, which in this case correspond to the clusters identified earlier in the analysis, while the y-axis shows the normalized expression levels of the genes.
+After identifying differentially expressed markers, the results can be visualized in several ways. In Figure 15, a violin plot is shown for the marker genes NKG7 and S100A8. The x-axis represents the cell identities, which in this case correspond to the clusters identified earlier in the analysis, while the y-axis shows the normalized expression levels of the genes.
 
-Based on Figure 16, NKG7 shows the highest expression in clusters 4 and 5. This observation is consistent with the UMAP in Figure 15, where clusters 4 and 5 are positioned close together, suggesting similar transcriptional profiles. S100A8 displays high expression in clusters 1 and 6. However, despite sharing the expression of this marker, clusters 1 and 6 are spatially separated in the UMAP plot, suggesting that they differ in their overall gene expression and may represent distinct cell states or populations that share a few markers.
+Based on Figure 15, NKG7 shows the highest expression in clusters 4 and 5. This observation is consistent with the UMAP in Figure 14, where clusters 4 and 5 are positioned close together, suggesting similar transcriptional profiles. S100A8 displays high expression in clusters 1 and 6. However, despite sharing the expression of this marker, clusters 1 and 6 are spatially separated in the UMAP plot, suggesting that they differ in their overall gene expression and may represent distinct cell states or populations that share a few markers.
 
-Another option for visualization is a UMAP feature plot, which displays the expression of specific marker genes across the UMAP embedding. This is shown in Figure 17. In this figure, the expression levels of NKG7, CST7, S100A8, and LGALS2 are visualized on the same UMAP embedding as shown in Figure 14. The color intensity indicates the expression level of the corresponding gene, with darker colors representing higher expression.
+Another option for visualization is a UMAP feature plot, which displays the expression of specific marker genes across the UMAP embedding. This is shown in Figure 16. In this figure, the expression levels of NKG7, CST7, S100A8, and LGALS2 are visualized on the same UMAP embedding as shown in Figure 13. The color intensity indicates the expression level of the corresponding gene, with darker colors representing higher expression.
 
 The selected markers originate from different clusters, allowing comparison of gene expression patterns across cell populations. As expected, higher expression levels (darker colors) are observed in the clusters where these marker genes are characteristic, demonstrating that the UMAP structure corresponds well with the identified cluster-specific expression patterns.
 

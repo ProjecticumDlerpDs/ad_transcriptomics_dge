@@ -1,8 +1,8 @@
 ---
 output:
-  html_document: default
   pdf_document:
     latex_engine: xelatex
+  html_document: default
 header-includes:
   - \usepackage{fontspec}
   - \usepackage{fancyvrb}
@@ -13,7 +13,6 @@ header-includes:
   - \setsansfont{DejaVu Sans}
   - \setmonofont{DejaVu Sans Mono}
   - \DefineVerbatimEnvironment{Highlighting}{Verbatim}{fontsize=\footnotesize,commandchars=\\\{\}}
-
 ---
 
 # Pipeline for Differential Gene Expression (DGE) Analysis in Alzheimers disease

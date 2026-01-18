@@ -39,7 +39,7 @@ knitr::opts_chunk$set(echo = FALSE,
  - [Research question](#research-question) 
  - [Packages and requirements](#packages-and-requirements)
  - [Load Seurat object](#load-seurat-object)
- - [Marker discovery per cluster](#marker-discovery-per-cluster)
+ - [Find markers per cluster](#find-markers-per-cluster)
  - [Marker plots](#marker-plots)
  - [Cell type annotation with BRETIGEA](#cell-type-annotation-with-bretigea)
  - [Assign labels back to Seurat](#assign-labels-back-to-seurat)
@@ -47,6 +47,17 @@ knitr::opts_chunk$set(echo = FALSE,
  - [Save outputs](#save-outputs)
 
 ___ 
+## Introduction
+This RMarkdown describes analysis of the single-nucleus RNA-sequencing count matrix from [GSE138852](https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSE138852&format=file&file=GSE138852%5Fcounts%2Ecsv%2Egz) using Seurat and BRETIGEA. Prior to this RMarkdown pre-processing, PCA and clustering of the count matrix should allready have been performed as described in ```02_identification_most_variable_features_in_Seurat.Rmd```.
+
+The scope of this RMarkdown includes finding markers with Seurat, plotting markers to verify which genes are stronger expressed within clusters and celltype annotation with BRETIGEA.
+BRETIGEA is short for BRain cEll Type specIfic Gene Expression Analysis, this is an R package that could be used to annotate brain cells based on the gene expression profile. Within BRETIGEA datasets for brain tissue samples are available that could be used to identify the six major brain cell types within a dataset. 
+
+## Research question
+For this project the main research question is _"How can a reliable and reproducible analysis pipeline be set up to identify cell type-specific differential gene expression in Alzheimer's disease using a filtered expression matrix generated from snRNA-seq data?"_. 
+
+The sub-question(s) that is answered in this RMarkdown is as followed;
+ - Can different cell types be distinguished from each other with BRETIGEA based on features found after sequencing RNA from the nuclei?
 
 ## Packages and Requirements 
 In order to run the analysis in Seurat a few packages need to be installed first. Packages and package versions are managed using ```renv```, instructions for setting up the R project with ```renv``` are given in the [README](https://github.com/ProjecticumDlerpDs/ad_transcriptomics_dge/blob/main/README.md) of the GitHub repository *ad_transcriptomics_dge*.
@@ -96,7 +107,7 @@ load_seurat_by_resolution <- function(resolution,
 seurat_obj <- load_seurat_by_resolution(params$resolution)
 ```
 
-## Marker discovery per cluster
+## Find markers per cluster
 Prior to analysis in BRETIGEA markers are identified per cluster in Seurat with the function ```FindAllMarkers()```.  
 This step is not required for analysis in BRETIGEA however, identifying the markers in the different clusters provides relevant information about cluster composition. By verifying the expressed markers per cluster it is possible to predict which cell types are present. For annotation purposes, only positive markers were selected with the argument ```only.pos``` since cell types are mainly defined by the different genes they express. The test used to compare expression values was a Wilcoxon rank-sum test, which is a non-parametric test that doesn't assume normality. In FindAllMarkers this test compares gene expression values of a cluster to all other cells, finding genes that are uniquely expressed in that cluster. 
 
@@ -108,7 +119,8 @@ markers_all <- FindAllMarkers(
   only.pos = TRUE,      # Only use positive markers
   test.use = "wilcox",  # Use Wilcoxon rank sum test
   min.pct = 0.25,       # The feature must be detected in at least 25% of the cells within this cluster
-  logfc.threshold = 0.25 # Minimum log fold change of 0.25 compared to other cells 
+  logfc.threshold = 0.25, # Minimum log fold change of 0.25 compared to other cells 
+  verbose = FALSE 
 )
 
 # Use the output of FindAllMarkers to create an object with the top markers per cluster to be used in a heatmap
@@ -121,6 +133,7 @@ top_markers <- markers_all %>%
 ## Marker plots
 
 ### Heatmap of top markers
+In figure 1 a heatmap was plotted. This heatmap shows the top five markers per cluster. The coloured bar on top of the heatmap shows the identity of each cluster, on the y-axis of the heatmap the different markers are shown. 
 
 ```{r Heatmap_top_markers, fig.height=8, fig.width=8}
 # Create a vector of the gene IDs per cluster to be used in a heatmap
@@ -139,30 +152,19 @@ DoHeatmap(seurat_obj, features = top5, group.by = "seurat_clusters") + NoLegend(
 ### DotPlot of canonical brain markers
 
 ```{r DotPlot_canonical_markers, fig.height=6, fig.width=10}
-canonical <- c(
-  "RBFOX3","SNAP25","SYT1",          # neurons
+dotplot_markers <- c(
+  "RELN","SYT1",                     # neurons
   "SLC17A7",                         # excitatory
   "GAD1","GAD2",                     # inhibitory
-  "AQP4","ALDH1A1","SLC1A2","SLC1A3",# astrocytes
+  "AQP4","GFAP","ALDH1L1",           # astrocytes
   "MBP","PLP1","MOG",                # oligodendrocytes
-  "PDGFRA","CSPG4","VCAN",           # OPC
-  "P2RY12","CX3CR1","C1QA",          # microglia
-  "PECAM1","VWF","KDR",              # endothelial
-  "PDGFRB","RGS5","ACTA2"            # pericyte/VSMC
+  "PDGFRA","VCAN",                   # OPC
+  "C1QA", "C1QB", "CD74", "CSF1R"   # microglia
 )
 
-canonical_present <- canonical[canonical %in% rownames(seurat_obj)]
+dotplot_markers_present <- dotplot_markers[dotplot_markers %in% rownames(seurat_obj)]
 
-DotPlot(seurat_obj, features = canonical_present) + RotatedAxis()
-```
-
-### FeaturePlot (UMAP) for key markers
-
-```{r FeaturePlot_key_markers, fig.height=7, fig.width=10}
-key_markers <- c("SLC17A7","GAD1","AQP4","MBP","P2RY12","PECAM1")
-key_present <- key_markers[key_markers %in% rownames(seurat_obj)]
-
-FeaturePlot(seurat_obj, features = key_present, ncol = 3)
+DotPlot(seurat_obj, features = dotplot_markers_present) + RotatedAxis()
 ```
 
 ## Cell type annotation with BRETIGEA
