@@ -305,7 +305,7 @@ After analysis the Seurat object with the correct parameters was saved as .RDS f
 
 ```{r Save_seurat_object_to_RDS, message=TRUE}
 # Create the output directory with here, show no warnings if directory allready exists
-dir.create(here("analyses","seurat"), showWarnings = FALSE)
+dir.create(here("analyses","seurat"), showWarnings = FALSE, recursive=TRUE)
 
 # Define output directory
 output_dir <- here("analyses", "seurat")
